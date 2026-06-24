@@ -1,0 +1,269 @@
+create table if not exists patient_groups (
+  id uuid primary key default gen_random_uuid(),
+  owner_user_id uuid not null references auth.users(id) on delete cascade,
+  patient_name text not null,
+  relation text,
+  group_name text not null,
+  memo text,
+  invite_token text not null unique,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists group_members (
+  id uuid primary key default gen_random_uuid(),
+  group_id uuid not null references patient_groups(id) on delete cascade,
+  user_id uuid references auth.users(id) on delete cascade,
+  display_name text not null,
+  role text not null default 'member' check (role in ('admin', 'member', 'viewer')),
+  contact text,
+  created_at timestamptz not null default now(),
+  unique (group_id, user_id)
+);
+
+create table if not exists appointments (
+  id uuid primary key default gen_random_uuid(),
+  group_id uuid not null references patient_groups(id) on delete cascade,
+  hospital_name text not null,
+  department text not null,
+  appointment_datetime timestamptz not null,
+  items_to_bring text,
+  memo text,
+  reservation_image_url text,
+  share_token text not null unique,
+  status text not null default 'upcoming' check (status in ('upcoming', 'completed', 'missed')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists appointment_companions (
+  id uuid primary key default gen_random_uuid(),
+  appointment_id uuid not null references appointments(id) on delete cascade,
+  user_id uuid references auth.users(id) on delete set null,
+  display_name text not null,
+  contact text,
+  comment text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists reminder_settings (
+  id uuid primary key default gen_random_uuid(),
+  appointment_id uuid not null references appointments(id) on delete cascade,
+  reminder_type text not null check (reminder_type in ('one_week_before', 'one_day_before', 'same_day_morning')),
+  enabled boolean not null default true,
+  remind_at timestamptz not null,
+  created_at timestamptz not null default now(),
+  unique (appointment_id, reminder_type)
+);
+
+create index if not exists patient_groups_invite_token_idx on patient_groups(invite_token);
+create index if not exists group_members_user_idx on group_members(user_id);
+create index if not exists appointments_group_datetime_idx on appointments(group_id, appointment_datetime);
+create index if not exists appointments_share_token_idx on appointments(share_token);
+create index if not exists appointment_companions_appointment_idx on appointment_companions(appointment_id);
+create index if not exists reminder_settings_appointment_idx on reminder_settings(appointment_id);
+create unique index if not exists appointment_companions_one_per_appointment_idx
+  on appointment_companions(appointment_id);
+
+alter table patient_groups enable row level security;
+alter table group_members enable row level security;
+alter table appointments enable row level security;
+alter table appointment_companions enable row level security;
+alter table reminder_settings enable row level security;
+
+create policy "Members can read their patient groups"
+  on patient_groups for select
+  using (
+    owner_user_id = auth.uid()
+    or exists (
+      select 1 from group_members
+      where group_members.group_id = patient_groups.id
+      and group_members.user_id = auth.uid()
+    )
+  );
+
+create policy "Authenticated users can open invite links"
+  on patient_groups for select
+  using (auth.role() = 'authenticated' and invite_token is not null);
+
+create policy "Shared appointment viewers can read patient group summary"
+  on patient_groups for select
+  using (
+    exists (
+      select 1 from appointments
+      where appointments.group_id = patient_groups.id
+      and appointments.share_token is not null
+    )
+  );
+
+create policy "Users can create patient groups"
+  on patient_groups for insert
+  with check (owner_user_id = auth.uid());
+
+create policy "Admins can update patient groups"
+  on patient_groups for update
+  using (
+    exists (
+      select 1 from group_members
+      where group_members.group_id = patient_groups.id
+      and group_members.user_id = auth.uid()
+      and group_members.role = 'admin'
+    )
+  );
+
+create policy "Members can read group members"
+  on group_members for select
+  using (
+    user_id = auth.uid()
+    or exists (
+      select 1 from group_members as own_membership
+      where own_membership.group_id = group_members.group_id
+      and own_membership.user_id = auth.uid()
+    )
+  );
+
+create policy "Users can join groups"
+  on group_members for insert
+  with check (user_id = auth.uid());
+
+create policy "Members can read appointments"
+  on appointments for select
+  using (
+    exists (
+      select 1 from group_members
+      where group_members.group_id = appointments.group_id
+      and group_members.user_id = auth.uid()
+    )
+  );
+
+create policy "Members can manage appointments"
+  on appointments for all
+  using (
+    exists (
+      select 1 from group_members
+      where group_members.group_id = appointments.group_id
+      and group_members.user_id = auth.uid()
+      and group_members.role in ('admin', 'member')
+    )
+  )
+  with check (
+    exists (
+      select 1 from group_members
+      where group_members.group_id = appointments.group_id
+      and group_members.user_id = auth.uid()
+      and group_members.role in ('admin', 'member')
+    )
+  );
+
+create policy "Shared appointment pages can read by token API"
+  on appointments for select
+  using (share_token is not null);
+
+create policy "Members can manage companions"
+  on appointment_companions for all
+  using (
+    exists (
+      select 1 from appointments
+      join group_members on group_members.group_id = appointments.group_id
+      where appointments.id = appointment_companions.appointment_id
+      and group_members.user_id = auth.uid()
+    )
+  )
+  with check (
+    user_id is null
+    or user_id = auth.uid()
+    or exists (
+      select 1 from appointments
+      join group_members on group_members.group_id = appointments.group_id
+      where appointments.id = appointment_companions.appointment_id
+      and group_members.user_id = auth.uid()
+    )
+  );
+
+create policy "Shared appointment viewers can read companions"
+  on appointment_companions for select
+  using (
+    exists (
+      select 1 from appointments
+      where appointments.id = appointment_companions.appointment_id
+      and appointments.share_token is not null
+    )
+  );
+
+create policy "Shared appointment viewers can add guest companions"
+  on appointment_companions for insert
+  with check (
+    (user_id is null or user_id = auth.uid())
+    and exists (
+      select 1 from appointments
+      where appointments.id = appointment_companions.appointment_id
+      and appointments.share_token is not null
+    )
+  );
+
+create policy "Members can read reminder settings"
+  on reminder_settings for select
+  using (
+    exists (
+      select 1 from appointments
+      join group_members on group_members.group_id = appointments.group_id
+      where appointments.id = reminder_settings.appointment_id
+      and group_members.user_id = auth.uid()
+    )
+  );
+
+create policy "Shared appointment viewers can read reminder settings"
+  on reminder_settings for select
+  using (
+    exists (
+      select 1 from appointments
+      where appointments.id = reminder_settings.appointment_id
+      and appointments.share_token is not null
+    )
+  );
+
+create policy "Members can manage reminder settings"
+  on reminder_settings for all
+  using (
+    exists (
+      select 1 from appointments
+      join group_members on group_members.group_id = appointments.group_id
+      where appointments.id = reminder_settings.appointment_id
+      and group_members.user_id = auth.uid()
+      and group_members.role in ('admin', 'member')
+    )
+  )
+  with check (
+    exists (
+      select 1 from appointments
+      join group_members on group_members.group_id = appointments.group_id
+      where appointments.id = reminder_settings.appointment_id
+      and group_members.user_id = auth.uid()
+      and group_members.role in ('admin', 'member')
+    )
+  );
+
+insert into storage.buckets (id, name, public)
+values ('reservation-images', 'reservation-images', false)
+on conflict (id) do nothing;
+
+create policy "Members can upload reservation images"
+  on storage.objects for insert
+  with check (
+    bucket_id = 'reservation-images'
+    and auth.role() = 'authenticated'
+  );
+
+create policy "Members can read reservation images"
+  on storage.objects for select
+  using (
+    bucket_id = 'reservation-images'
+    and auth.role() = 'authenticated'
+  );
+
+create policy "Members can update reservation images"
+  on storage.objects for update
+  using (
+    bucket_id = 'reservation-images'
+    and auth.role() = 'authenticated'
+  );
