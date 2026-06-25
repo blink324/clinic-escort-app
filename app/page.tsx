@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AuthPanel } from "@/components/AuthPanel";
 import { BottomNav } from "@/components/BottomNav";
-import { currentLocalUser, signOut } from "@/lib/auth";
+import { getActiveUser, signOut } from "@/lib/auth";
 import { enabledReminderText } from "@/lib/reminders";
 import { getAppointments, seedDemoData } from "@/lib/storage";
 import type { AppointmentView, AuthUser } from "@/lib/types";
@@ -48,7 +48,7 @@ export default function HomePage() {
   const [mode, setMode] = useState<"list" | "calendar">("list");
 
   async function refresh() {
-    const current = currentLocalUser();
+    const current = await getActiveUser();
     if (current) seedDemoData(current);
     setUser(current);
     setAppointments(current ? await getAppointments() : []);

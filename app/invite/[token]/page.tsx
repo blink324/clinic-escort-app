@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AuthPanel } from "@/components/AuthPanel";
-import { currentLocalUser } from "@/lib/auth";
+import { getActiveUser } from "@/lib/auth";
 import { getGroupByInviteToken, joinGroup } from "@/lib/storage";
 import type { AuthUser, PatientGroup } from "@/lib/types";
 
@@ -15,7 +15,7 @@ export default function InvitePage() {
   const [joined, setJoined] = useState(false);
 
   async function refresh() {
-    setUser(currentLocalUser());
+    setUser(await getActiveUser());
     if (params.token) setGroup((await getGroupByInviteToken(params.token)) || null);
   }
 

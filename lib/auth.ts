@@ -4,38 +4,82 @@ import { supabase } from "@/lib/supabase";
 import { getCurrentUser, setCurrentUser, signInDemo, signOutLocal } from "@/lib/storage";
 import type { AuthUser } from "@/lib/types";
 
-export async function signInOrRegister(email: string, password: string, displayName: string) {
-  if (supabase) {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (!error && data.user && data.session) {
-      const user = {
-        id: data.user.id,
-        email: data.user.email || email,
-        display_name: data.user.user_metadata.display_name || displayName || email.split("@")[0]
-      } satisfies AuthUser;
-      setCurrentUser(user);
-      return user;
-    }
-    const signUp = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { display_name: displayName } }
-    });
-    if (signUp.error) throw signUp.error;
-    if (signUp.data.user && signUp.data.session) {
-      const user = {
-        id: signUp.data.user.id,
-        email: signUp.data.user.email || email,
-        display_name: displayName || email.split("@")[0]
-      } satisfies AuthUser;
-      setCurrentUser(user);
-      return user;
-    }
-    if (signUp.data.user) {
-      throw new Error("確認メールを送信しました。メール内のリンクを開いてから、もう一度ログインしてください。");
-    }
+function userFromSupabase(user: { id: string; email?: string; user_metadata?: Record<string, unknown> }, fallbackName = "自分") {
+  return {
+    id: user.id,
+    email: user.email || "",
+    display_name:
+      typeof user.user_metadata?.display_name === "string"
+        ? user.user_metadata.display_name
+        : fallbackName || user.email?.split("@")[0] || "自分"
+  } satisfies AuthUser;
+}
+
+function friendlyAuthError(message: string) {
+  const lower = message.toLowerCase();
+  if (lower.includes("rate limit")) {
+    return "確認メールの送信回数が上限に達しました。しばらく待ってから再度お試しください。すでに登録済みの場合はログインを選んでください。";
   }
-  return signInDemo(email, displayName);
+  if (lower.includes("invalid login credentials")) {
+    return "メールアドレスまたはパスワードが違います。新規登録がまだの場合は、新規登録を選んでください。";
+  }
+  if (lower.includes("email not confirmed")) {
+    return "メール確認がまだ完了していません。確認メール内のリンクを開いてからログインしてください。";
+  }
+  return message;
+}
+
+export async function signInWithEmail(email: string, password: string) {
+  if (!supabase) return signInDemo(email, "自分");
+
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw new Error(friendlyAuthError(error.message));
+  if (!data.user || !data.session) throw new Error("ログインできませんでした。確認メールが届いている場合は、メール内のリンクを開いてください。");
+
+  const user = userFromSupabase(data.user);
+  setCurrentUser(user);
+  return user;
+}
+
+export async function registerWithEmail(email: string, password: string, displayName: string) {
+  if (!supabase) return signInDemo(email, displayName);
+
+  const emailRedirectTo =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/`
+      : process.env.NEXT_PUBLIC_APP_URL || undefined;
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { display_name: displayName },
+      emailRedirectTo
+    }
+  });
+
+  if (error) throw new Error(friendlyAuthError(error.message));
+  if (data.user && data.session) {
+    const user = userFromSupabase(data.user, displayName);
+    setCurrentUser(user);
+    return user;
+  }
+
+  throw new Error("確認メールを送信しました。メール内のリンクを開いてから、ログインしてください。");
+}
+
+export async function getActiveUser() {
+  if (!supabase) return getCurrentUser();
+
+  const { data } = await supabase.auth.getSession();
+  if (!data.session?.user) {
+    signOutLocal();
+    return null;
+  }
+
+  const user = userFromSupabase(data.session.user);
+  setCurrentUser(user);
+  return user;
 }
 
 export async function signOut() {
