@@ -8,8 +8,8 @@ type Props = {
 };
 
 export function AuthPanel({ onSignedIn }: Props) {
-  const [email, setEmail] = useState("demo@example.com");
-  const [password, setPassword] = useState("password123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("自分");
   const [error, setError] = useState("");
 
@@ -29,7 +29,7 @@ export function AuthPanel({ onSignedIn }: Props) {
         <p className="eyebrow">家族の付き添い調整</p>
         <h1>通院予定を家族で分かち合う</h1>
         <p>
-          Supabase Authのメール認証に対応したログイン画面です。環境変数が未設定の間は、入力した名前でデモ利用できます。
+          メールアドレスでログインまたは新規登録できます。確認メールが届いた場合は、メール内のリンクを開いてからログインしてください。
         </p>
         <form className="inline-form" onSubmit={submit}>
           <label>
