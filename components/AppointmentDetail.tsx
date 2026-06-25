@@ -35,6 +35,13 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
       new Date(appointment.appointment_datetime)
     )}\n付き添い調整: ${shareUrl}`
   )}`;
+  const companionNoticeLineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(
+    `${appointment.group.patient_name}さんの通院付き添いが決まりました\n\n${dateFormatter.format(
+      new Date(appointment.appointment_datetime)
+    )}\n${appointment.hospital_name} / ${appointment.department}\n付き添い: ${
+      appointment.companion?.display_name || "未定"
+    }さん\n\n確認する: ${shareUrl}`
+  )}`;
 
   function setCompanion(companion: AppointmentCompanion) {
     setAppointment((current) => ({ ...current, companion }));
@@ -88,6 +95,9 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
               <strong>{appointment.companion.display_name}さん</strong>
               {appointment.companion.contact && <p>連絡先: {appointment.companion.contact}</p>}
               {appointment.companion.comment && <p>{appointment.companion.comment}</p>}
+              <a className="line-action full notify-line" href={companionNoticeLineUrl} target="_blank" rel="noreferrer">
+                LINEで家族に知らせる
+              </a>
             </div>
           ) : (
             <div className="escort-box missing">

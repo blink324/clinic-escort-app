@@ -71,16 +71,40 @@ alter table appointments enable row level security;
 alter table appointment_companions enable row level security;
 alter table reminder_settings enable row level security;
 
+create or replace function public.is_group_member(target_group_id uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select exists (
+    select 1
+    from group_members
+    where group_members.group_id = target_group_id
+    and group_members.user_id = auth.uid()
+  );
+$$;
+
+create or replace function public.is_group_admin(target_group_id uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select exists (
+    select 1
+    from group_members
+    where group_members.group_id = target_group_id
+    and group_members.user_id = auth.uid()
+    and group_members.role = 'admin'
+  );
+$$;
+
 create policy "Members can read their patient groups"
   on patient_groups for select
-  using (
-    owner_user_id = auth.uid()
-    or exists (
-      select 1 from group_members
-      where group_members.group_id = patient_groups.id
-      and group_members.user_id = auth.uid()
-    )
-  );
+  using (owner_user_id = auth.uid() or public.is_group_member(id));
 
 create policy "Authenticated users can open invite links"
   on patient_groups for select
@@ -102,25 +126,11 @@ create policy "Users can create patient groups"
 
 create policy "Admins can update patient groups"
   on patient_groups for update
-  using (
-    exists (
-      select 1 from group_members
-      where group_members.group_id = patient_groups.id
-      and group_members.user_id = auth.uid()
-      and group_members.role = 'admin'
-    )
-  );
+  using (public.is_group_admin(id));
 
 create policy "Members can read group members"
   on group_members for select
-  using (
-    user_id = auth.uid()
-    or exists (
-      select 1 from group_members as own_membership
-      where own_membership.group_id = group_members.group_id
-      and own_membership.user_id = auth.uid()
-    )
-  );
+  using (user_id = auth.uid() or public.is_group_member(group_id));
 
 create policy "Users can join groups"
   on group_members for insert
@@ -128,32 +138,12 @@ create policy "Users can join groups"
 
 create policy "Members can read appointments"
   on appointments for select
-  using (
-    exists (
-      select 1 from group_members
-      where group_members.group_id = appointments.group_id
-      and group_members.user_id = auth.uid()
-    )
-  );
+  using (public.is_group_member(group_id));
 
 create policy "Members can manage appointments"
   on appointments for all
-  using (
-    exists (
-      select 1 from group_members
-      where group_members.group_id = appointments.group_id
-      and group_members.user_id = auth.uid()
-      and group_members.role in ('admin', 'member')
-    )
-  )
-  with check (
-    exists (
-      select 1 from group_members
-      where group_members.group_id = appointments.group_id
-      and group_members.user_id = auth.uid()
-      and group_members.role in ('admin', 'member')
-    )
-  );
+  using (public.is_group_member(group_id))
+  with check (public.is_group_member(group_id));
 
 create policy "Shared appointment pages can read by token API"
   on appointments for select
@@ -164,9 +154,8 @@ create policy "Members can manage companions"
   using (
     exists (
       select 1 from appointments
-      join group_members on group_members.group_id = appointments.group_id
       where appointments.id = appointment_companions.appointment_id
-      and group_members.user_id = auth.uid()
+      and public.is_group_member(appointments.group_id)
     )
   )
   with check (
@@ -174,9 +163,8 @@ create policy "Members can manage companions"
     or user_id = auth.uid()
     or exists (
       select 1 from appointments
-      join group_members on group_members.group_id = appointments.group_id
       where appointments.id = appointment_companions.appointment_id
-      and group_members.user_id = auth.uid()
+      and public.is_group_member(appointments.group_id)
     )
   );
 
@@ -206,9 +194,8 @@ create policy "Members can read reminder settings"
   using (
     exists (
       select 1 from appointments
-      join group_members on group_members.group_id = appointments.group_id
       where appointments.id = reminder_settings.appointment_id
-      and group_members.user_id = auth.uid()
+      and public.is_group_member(appointments.group_id)
     )
   );
 
@@ -227,19 +214,15 @@ create policy "Members can manage reminder settings"
   using (
     exists (
       select 1 from appointments
-      join group_members on group_members.group_id = appointments.group_id
       where appointments.id = reminder_settings.appointment_id
-      and group_members.user_id = auth.uid()
-      and group_members.role in ('admin', 'member')
+      and public.is_group_member(appointments.group_id)
     )
   )
   with check (
     exists (
       select 1 from appointments
-      join group_members on group_members.group_id = appointments.group_id
       where appointments.id = reminder_settings.appointment_id
-      and group_members.user_id = auth.uid()
-      and group_members.role in ('admin', 'member')
+      and public.is_group_member(appointments.group_id)
     )
   );
 
