@@ -71,11 +71,6 @@ export function AuthPanel({ onSignedIn }: Props) {
               ログイン
             </button>
           </div>
-          <div className="brand-strip">
-            <span>付き添い未定を見える化</span>
-            <span>LINEで共有</span>
-            <span>家族グループ管理</span>
-          </div>
         </div>
       </section>
     );
@@ -84,9 +79,6 @@ export function AuthPanel({ onSignedIn }: Props) {
   return (
     <section className="auth-screen">
       <div className="auth-card">
-        <button className="text-button back-to-brand" onClick={() => setShowForm(false)} type="button">
-          つきそいへ戻る
-        </button>
         <p className="eyebrow">つきそい</p>
         <h1>{mode === "login" ? "ログイン" : "新規登録"}</h1>
         <p>
