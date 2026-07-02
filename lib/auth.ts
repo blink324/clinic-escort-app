@@ -4,14 +4,13 @@ import { supabase } from "@/lib/supabase";
 import { getCurrentUser, setCurrentUser, signInDemo, signOutLocal } from "@/lib/storage";
 import type { AuthUser } from "@/lib/types";
 
-function userFromSupabase(user: { id: string; email?: string; user_metadata?: Record<string, unknown> }, fallbackName = "自分") {
+function userFromSupabase(user: { id: string; email?: string; user_metadata?: Record<string, unknown> }, fallbackName = "") {
+  const metadataName = typeof user.user_metadata?.display_name === "string" ? user.user_metadata.display_name.trim() : "";
+  const fallback = fallbackName.trim() || user.email?.split("@")[0] || "名前未設定";
   return {
     id: user.id,
     email: user.email || "",
-    display_name:
-      typeof user.user_metadata?.display_name === "string"
-        ? user.user_metadata.display_name
-        : fallbackName || user.email?.split("@")[0] || "自分"
+    display_name: metadataName || fallback
   } satisfies AuthUser;
 }
 
@@ -46,7 +45,7 @@ export function authErrorMessage(caught: unknown) {
 }
 
 export async function signInWithEmail(email: string, password: string) {
-  if (!supabase) return signInDemo(email, "自分");
+  if (!supabase) return signInDemo(email, email.split("@")[0] || "名前未設定");
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw new Error(friendlyAuthError(error.message));
@@ -58,7 +57,9 @@ export async function signInWithEmail(email: string, password: string) {
 }
 
 export async function registerWithEmail(email: string, password: string, displayName: string) {
-  if (!supabase) return signInDemo(email, displayName);
+  const normalizedDisplayName = displayName.trim();
+  if (!normalizedDisplayName) throw new Error("表示名を入力してください。");
+  if (!supabase) return signInDemo(email, normalizedDisplayName);
 
   const emailRedirectTo =
     typeof window !== "undefined"
@@ -69,14 +70,14 @@ export async function registerWithEmail(email: string, password: string, display
     email,
     password,
     options: {
-      data: { display_name: displayName },
+      data: { display_name: normalizedDisplayName },
       emailRedirectTo
     }
   });
 
   if (error) throw new Error(friendlyAuthError(error.message));
   if (data.user && data.session) {
-    const user = userFromSupabase(data.user, displayName);
+    const user = userFromSupabase(data.user, normalizedDisplayName);
     setCurrentUser(user);
     return user;
   }

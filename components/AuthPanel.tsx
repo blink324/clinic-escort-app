@@ -14,7 +14,7 @@ export function AuthPanel({ onSignedIn }: Props) {
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [displayName, setDisplayName] = useState("自分");
+  const [displayName, setDisplayName] = useState("");
   const [message, setMessage] = useState("");
   const [isNotice, setIsNotice] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -29,7 +29,7 @@ export function AuthPanel({ onSignedIn }: Props) {
       if (mode === "login") {
         await signInWithEmail(email, password);
       } else {
-        await registerWithEmail(email, password, displayName);
+        await registerWithEmail(email, password, displayName.trim());
       }
       onSignedIn();
     } catch (caught) {
@@ -100,7 +100,12 @@ export function AuthPanel({ onSignedIn }: Props) {
           {mode === "register" && (
             <label>
               表示名
-              <input required value={displayName} onChange={(event) => setDisplayName(event.target.value)} />
+              <input
+                placeholder="例：太郎、長女、花子"
+                required
+                value={displayName}
+                onChange={(event) => setDisplayName(event.target.value)}
+              />
             </label>
           )}
           <label>
