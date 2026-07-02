@@ -15,7 +15,10 @@ function userFromSupabase(user: { id: string; email?: string; user_metadata?: Re
   } satisfies AuthUser;
 }
 
-function friendlyAuthError(message: string) {
+function friendlyAuthError(message?: string) {
+  if (!message) {
+    return "認証処理に失敗しました。時間を置いてもう一度お試しください。";
+  }
   const lower = message.toLowerCase();
   if (lower.includes("rate limit")) {
     return "確認メールの送信回数が上限に達しました。しばらく待ってから再度お試しください。すでに登録済みの場合はログインを選んでください。";
@@ -27,6 +30,18 @@ function friendlyAuthError(message: string) {
     return "メール確認がまだ完了していません。確認メール内のリンクを開いてからログインしてください。";
   }
   return message;
+}
+
+export function authErrorMessage(caught: unknown) {
+  if (caught instanceof Error) return friendlyAuthError(caught.message);
+  if (typeof caught === "string") return friendlyAuthError(caught);
+  if (caught && typeof caught === "object") {
+    const record = caught as Record<string, unknown>;
+    if (typeof record.message === "string") return friendlyAuthError(record.message);
+    if (typeof record.error_description === "string") return friendlyAuthError(record.error_description);
+    if (typeof record.error === "string") return friendlyAuthError(record.error);
+  }
+  return "認証処理に失敗しました。時間を置いてもう一度お試しください。";
 }
 
 export async function signInWithEmail(email: string, password: string) {

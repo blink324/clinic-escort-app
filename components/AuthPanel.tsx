@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { registerWithEmail, signInWithEmail } from "@/lib/auth";
+import { authErrorMessage, registerWithEmail, signInWithEmail } from "@/lib/auth";
 
 type Props = {
   onSignedIn: () => void;
@@ -33,7 +33,7 @@ export function AuthPanel({ onSignedIn }: Props) {
       }
       onSignedIn();
     } catch (caught) {
-      const text = caught instanceof Error ? caught.message : "処理できませんでした";
+      const text = authErrorMessage(caught);
       setMessage(text);
       setIsNotice(text.includes("確認メール"));
     } finally {
