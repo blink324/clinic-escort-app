@@ -223,6 +223,8 @@ button { cursor: pointer; }
   margin-bottom: 14px;
 }
 
+.action-grid.no-bottom { margin-bottom: 0; }
+
 .segmented {
   background: #e6edf8;
   border-radius: 8px;

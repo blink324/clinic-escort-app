@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent } from "react";
 import { useMemo, useState } from "react";
 import { CompanionForm } from "@/components/CompanionForm";
+import { calendarFileName, createIcsFile, googleCalendarUrl } from "@/lib/calendar";
 import {
   deleteAppointment,
   deleteCompanion,
@@ -57,6 +58,7 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
     if (typeof window === "undefined") return "";
     return `${window.location.origin}/share/${appointment.share_token}`;
   }, [appointment.share_token]);
+  const calendarUrl = useMemo(() => googleCalendarUrl(appointment), [appointment]);
   const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(
     `${appointment.group.patient_name}さんの通院予定\n${appointment.hospital_name} ${appointment.department}\n${dateFormatter.format(
       new Date(appointment.appointment_datetime)
@@ -131,6 +133,18 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
     if (!ok) return;
     await deleteAppointment(appointment.id);
     router.push("/");
+  }
+
+  function downloadCalendarFile() {
+    const blob = new Blob([createIcsFile(appointment)], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = calendarFileName(appointment);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
   }
 
   const isPast = new Date(appointment.appointment_datetime).getTime() < Date.now();
@@ -211,6 +225,18 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
           <img className="reservation-image" src={appointment.reservation_image_url} alt="予約票" />
         </section>
       )}
+
+      <section className="section-block compact">
+        <h2>カレンダーに追加</h2>
+        <div className="action-grid no-bottom">
+          <a className="secondary-action" href={calendarUrl} target="_blank" rel="noreferrer">
+            Googleカレンダー
+          </a>
+          <button className="secondary-action" onClick={downloadCalendarFile} type="button">
+            iPhone/Appleカレンダー
+          </button>
+        </div>
+      </section>
 
       {!shared && (
         <section className="action-grid">
