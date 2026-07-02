@@ -214,8 +214,8 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
 
       {!shared && (
         <section className="action-grid">
-          <button className="secondary-action" onClick={() => setEditingAppointment((current) => !current)}>
-            {editingAppointment ? "編集を閉じる" : "予定を編集"}
+          <button className="secondary-action" onClick={() => setEditingAppointment(true)}>
+            予定を編集
           </button>
           <button className="danger-action" onClick={() => void removeAppointment()}>
             予定を削除
@@ -230,73 +230,80 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
       )}
 
       {editingAppointment && !shared && (
-        <section className="section-block compact">
-          <h2>予定を編集</h2>
-          <form className="inline-form" onSubmit={(event) => void saveEditedAppointment(event)}>
-            <label>
-              病院名
-              <input
-                required
-                value={editForm.hospital_name}
-                onChange={(event) => updateEditForm("hospital_name", event.target.value)}
-              />
-            </label>
-            <label>
-              診療科
-              <input
-                required
-                value={editForm.department}
-                onChange={(event) => updateEditForm("department", event.target.value)}
-              />
-            </label>
-            <label>
-              受診日時
-              <input
-                required
-                type="datetime-local"
-                value={editForm.appointment_datetime}
-                onChange={(event) => updateEditForm("appointment_datetime", event.target.value)}
-              />
-            </label>
-            <label>
-              持ち物
-              <textarea
-                rows={3}
-                value={editForm.items_to_bring}
-                onChange={(event) => updateEditForm("items_to_bring", event.target.value)}
-              />
-            </label>
-            <label>
-              メモ
-              <textarea rows={4} value={editForm.memo} onChange={(event) => updateEditForm("memo", event.target.value)} />
-            </label>
-            <fieldset className="reminder-fieldset">
-              <legend>リマインド設定</legend>
-              {[
-                ["one_week_before", "1週間前"],
-                ["one_day_before", "前日"],
-                ["same_day_morning", "当日朝"]
-              ].map(([key, label]) => (
-                <label className="switch-line" key={key}>
-                  <span>{label}</span>
-                  <input
-                    checked={editForm.reminders[key as ReminderType]}
-                    onChange={(event) =>
-                      updateEditForm("reminders", {
-                        ...editForm.reminders,
-                        [key]: event.target.checked
-                      })
-                    }
-                    type="checkbox"
-                  />
-                </label>
-              ))}
-            </fieldset>
-            <button className="primary-action full" disabled={savingAppointment} type="submit">
-              {savingAppointment ? "保存中..." : "変更を保存"}
-            </button>
-          </form>
-        </section>
+        <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="appointment-edit-title">
+          <section className="modal-panel">
+            <div className="modal-header">
+              <h2 id="appointment-edit-title">予定を編集</h2>
+              <button className="text-button" onClick={() => setEditingAppointment(false)} type="button">
+                閉じる
+              </button>
+            </div>
+            <form className="inline-form" onSubmit={(event) => void saveEditedAppointment(event)}>
+              <label>
+                病院名
+                <input
+                  required
+                  value={editForm.hospital_name}
+                  onChange={(event) => updateEditForm("hospital_name", event.target.value)}
+                />
+              </label>
+              <label>
+                診療科
+                <input
+                  required
+                  value={editForm.department}
+                  onChange={(event) => updateEditForm("department", event.target.value)}
+                />
+              </label>
+              <label>
+                受診日時
+                <input
+                  required
+                  type="datetime-local"
+                  value={editForm.appointment_datetime}
+                  onChange={(event) => updateEditForm("appointment_datetime", event.target.value)}
+                />
+              </label>
+              <label>
+                持ち物
+                <textarea
+                  rows={3}
+                  value={editForm.items_to_bring}
+                  onChange={(event) => updateEditForm("items_to_bring", event.target.value)}
+                />
+              </label>
+              <label>
+                メモ
+                <textarea rows={4} value={editForm.memo} onChange={(event) => updateEditForm("memo", event.target.value)} />
+              </label>
+              <fieldset className="reminder-fieldset">
+                <legend>リマインド設定</legend>
+                {[
+                  ["one_week_before", "1週間前"],
+                  ["one_day_before", "前日"],
+                  ["same_day_morning", "当日朝"]
+                ].map(([key, label]) => (
+                  <label className="switch-line" key={key}>
+                    <span>{label}</span>
+                    <input
+                      checked={editForm.reminders[key as ReminderType]}
+                      onChange={(event) =>
+                        updateEditForm("reminders", {
+                          ...editForm.reminders,
+                          [key]: event.target.checked
+                        })
+                      }
+                      type="checkbox"
+                    />
+                  </label>
+                ))}
+              </fieldset>
+              <button className="primary-action full" disabled={savingAppointment} type="submit">
+                {savingAppointment ? "保存中..." : "変更を保存"}
+              </button>
+            </form>
+          </section>
+        </div>
       )}
 
       {isPast && !shared && (

@@ -585,9 +585,54 @@ textarea { line-height: 1.6; resize: vertical; }
 .error-text { color: var(--danger) !important; font-weight: 800; }
 .notice-text { color: var(--primary-dark) !important; font-weight: 800; }
 
+.modal-backdrop {
+  align-items: flex-end;
+  background: rgba(24, 34, 45, 0.62);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 18px 14px;
+  position: fixed;
+  z-index: 80;
+}
+
+.modal-panel {
+  background: var(--surface);
+  border-radius: 8px;
+  box-shadow: 0 24px 70px rgba(24, 34, 45, 0.28);
+  max-height: min(86vh, 820px);
+  max-width: 560px;
+  overflow: auto;
+  padding: 18px;
+  width: 100%;
+}
+
+.modal-header {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.modal-header h2 {
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.text-button {
+  background: transparent;
+  border: 0;
+  color: var(--primary);
+  font-weight: 900;
+  min-height: 44px;
+  padding: 8px 0 8px 14px;
+}
+
 @media (min-width: 760px) {
   .mobile-shell { padding-top: 28px; }
   .info-grid { grid-template-columns: 1fr 1fr; }
+  .modal-backdrop { align-items: center; }
 }
 
 @media (max-width: 390px) {
