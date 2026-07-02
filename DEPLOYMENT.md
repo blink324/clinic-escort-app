@@ -41,6 +41,12 @@ Redirect URLs:
   https://clinic-escort-app.vercel.app/**
 ```
 
+Supabase Auth email template:
+
+Go to Authentication > Email Templates > Confirm signup, then replace the template with:
+
+`supabase/email-confirmation-template.html`
+
 ## 2. Vercel
 
 Set these environment variables in Vercel Project Settings:

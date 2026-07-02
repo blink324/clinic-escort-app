@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
-import { getGroups, saveAppointment } from "@/lib/storage";
+import { createGroup, getGroups, saveAppointment } from "@/lib/storage";
 import type { AppointmentInput, PatientGroup, ReminderType } from "@/lib/types";
 
 const reminderTypes: { key: ReminderType; label: string }[] = [
@@ -17,6 +17,10 @@ export default function NewAppointmentPage() {
   const router = useRouter();
   const [groups, setGroups] = useState<PatientGroup[]>([]);
   const [saving, setSaving] = useState(false);
+  const [groupMode, setGroupMode] = useState<"existing" | "new">("new");
+  const [patientName, setPatientName] = useState("");
+  const [relation, setRelation] = useState("");
+  const [customRelation, setCustomRelation] = useState("");
   const [form, setForm] = useState<AppointmentInput>({
     group_id: "",
     hospital_name: "",
@@ -31,9 +35,10 @@ export default function NewAppointmentPage() {
   useEffect(() => {
     async function loadGroups() {
       const nextGroups = await getGroups();
-    const urlGroup = new URLSearchParams(window.location.search).get("group");
-    setGroups(nextGroups);
-    setForm((current) => ({ ...current, group_id: urlGroup || nextGroups[0]?.id || "" }));
+      const urlGroup = new URLSearchParams(window.location.search).get("group");
+      setGroups(nextGroups);
+      setGroupMode(urlGroup || nextGroups.length > 0 ? "existing" : "new");
+      setForm((current) => ({ ...current, group_id: urlGroup || nextGroups[0]?.id || "" }));
     }
     void loadGroups();
   }, []);
@@ -53,7 +58,18 @@ export default function NewAppointmentPage() {
     event.preventDefault();
     setSaving(true);
     try {
-      const appointment = await saveAppointment(form);
+      let groupId = form.group_id;
+      if (groupMode === "new" || !groupId) {
+        const selectedRelation = relation === "その他" ? customRelation : relation;
+        const group = await createGroup({
+          patient_name: patientName,
+          relation: selectedRelation || "本人",
+          group_name: `${patientName}の通院グループ`,
+          memo: ""
+        });
+        groupId = group.id;
+      }
+      const appointment = await saveAppointment({ ...form, group_id: groupId });
       router.push(`/appointments/${appointment.id}`);
     } finally {
       setSaving(false);
@@ -71,14 +87,73 @@ export default function NewAppointmentPage() {
       </header>
 
       <form className="form-grid" onSubmit={submit}>
-        <label>
-          患者グループ
-          <select required value={form.group_id} onChange={(event) => update("group_id", event.target.value)}>
-            {groups.map((group) => (
-              <option key={group.id} value={group.id}>{group.group_name}</option>
-            ))}
-          </select>
-        </label>
+        {groups.length > 0 && (
+          <fieldset className="reminder-fieldset">
+            <legend>患者</legend>
+            <label className="switch-line">
+              <span>登録済みグループから選ぶ</span>
+              <input
+                checked={groupMode === "existing"}
+                name="group-mode"
+                onChange={() => setGroupMode("existing")}
+                type="radio"
+              />
+            </label>
+            <label className="switch-line">
+              <span>患者名を入力する</span>
+              <input
+                checked={groupMode === "new"}
+                name="group-mode"
+                onChange={() => setGroupMode("new")}
+                type="radio"
+              />
+            </label>
+          </fieldset>
+        )}
+
+        {groupMode === "existing" && groups.length > 0 ? (
+          <label>
+            患者グループ
+            <select required value={form.group_id} onChange={(event) => update("group_id", event.target.value)}>
+              {groups.map((group) => (
+                <option key={group.id} value={group.id}>{group.group_name}</option>
+              ))}
+            </select>
+          </label>
+        ) : (
+          <>
+            <label>
+              患者名
+              <input required value={patientName} onChange={(event) => setPatientName(event.target.value)} />
+            </label>
+            <label>
+              続柄
+              <select required value={relation} onChange={(event) => setRelation(event.target.value)}>
+                <option value="">選択してください</option>
+                <option value="母">母</option>
+                <option value="父">父</option>
+                <option value="祖母">祖母</option>
+                <option value="祖父">祖父</option>
+                <option value="配偶者">配偶者</option>
+                <option value="義母">義母</option>
+                <option value="義父">義父</option>
+                <option value="本人">本人</option>
+                <option value="その他">その他</option>
+              </select>
+            </label>
+            {relation === "その他" && (
+              <label>
+                その他の続柄
+                <input
+                  required
+                  value={customRelation}
+                  onChange={(event) => setCustomRelation(event.target.value)}
+                  placeholder="叔母、兄など"
+                />
+              </label>
+            )}
+          </>
+        )}
         <label>
           病院名
           <input required value={form.hospital_name} onChange={(event) => update("hospital_name", event.target.value)} />
@@ -123,7 +198,7 @@ export default function NewAppointmentPage() {
         </label>
         {form.reservation_image_url && <img className="reservation-preview" src={form.reservation_image_url} alt="予約票プレビュー" />}
 
-        <button className="primary-action full" disabled={saving || groups.length === 0} type="submit">
+        <button className="primary-action full" disabled={saving} type="submit">
           {saving ? "登録中..." : "登録する"}
         </button>
       </form>
