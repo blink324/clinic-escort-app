@@ -16,10 +16,11 @@ function userFromSupabase(user: { id: string; email?: string; user_metadata?: Re
 }
 
 function friendlyAuthError(message?: string) {
-  if (!message) {
+  const normalized = message?.trim();
+  if (!normalized || normalized === "{}" || normalized === "[object Object]") {
     return "認証処理に失敗しました。時間を置いてもう一度お試しください。";
   }
-  const lower = message.toLowerCase();
+  const lower = normalized.toLowerCase();
   if (lower.includes("rate limit")) {
     return "確認メールの送信回数が上限に達しました。しばらく待ってから再度お試しください。すでに登録済みの場合はログインを選んでください。";
   }
@@ -29,7 +30,7 @@ function friendlyAuthError(message?: string) {
   if (lower.includes("email not confirmed")) {
     return "メール確認がまだ完了していません。確認メール内のリンクを開いてからログインしてください。";
   }
-  return message;
+  return normalized;
 }
 
 export function authErrorMessage(caught: unknown) {
