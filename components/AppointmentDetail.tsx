@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CompanionForm } from "@/components/CompanionForm";
 import { calendarFileName, createIcsFile, googleCalendarUrl } from "@/lib/calendar";
 import {
@@ -71,6 +71,15 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
       appointment.companion?.display_name || "未定"
     }さん\n\n確認する: ${shareUrl}`
   )}`;
+
+  useEffect(() => {
+    if (!editingAppointment) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [editingAppointment]);
 
   function setCompanion(companion: AppointmentCompanion) {
     setAppointment((current) => ({ ...current, companion }));

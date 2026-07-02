@@ -11,6 +11,15 @@ import type { AppointmentView, AuthUser } from "@/lib/types";
 
 const dateFormatter = new Intl.DateTimeFormat("ja-JP", { month: "numeric", day: "numeric", weekday: "short" });
 const timeFormatter = new Intl.DateTimeFormat("ja-JP", { hour: "2-digit", minute: "2-digit" });
+const monthFormatter = new Intl.DateTimeFormat("ja-JP", { year: "numeric", month: "long" });
+const selectedDateFormatter = new Intl.DateTimeFormat("ja-JP", { month: "long", day: "numeric", weekday: "long" });
+
+function localDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 function bucketFor(dateValue: string) {
   const today = new Date();
@@ -26,17 +35,19 @@ function bucketFor(dateValue: string) {
 
 function monthDays(appointments: AppointmentView[]) {
   const current = new Date();
+  const todayKey = localDateKey(current);
   const first = new Date(current.getFullYear(), current.getMonth(), 1);
   const start = new Date(first);
   start.setDate(first.getDate() - first.getDay());
   return Array.from({ length: 42 }, (_, index) => {
     const date = new Date(start);
     date.setDate(start.getDate() + index);
-    const key = date.toISOString().slice(0, 10);
+    const key = localDateKey(date);
     return {
       date,
       key,
       inMonth: date.getMonth() === current.getMonth(),
+      isToday: key === todayKey,
       count: appointments.filter((appointment) => appointment.appointment_datetime.slice(0, 10) === key).length
     };
   });
@@ -46,6 +57,7 @@ export default function HomePage() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [appointments, setAppointments] = useState<AppointmentView[]>([]);
   const [mode, setMode] = useState<"list" | "calendar">("list");
+  const [selectedDate, setSelectedDate] = useState(localDateKey(new Date()));
 
   async function refresh() {
     const current = await getActiveUser();
@@ -67,6 +79,10 @@ export default function HomePage() {
   }, [appointments]);
 
   const pendingCount = appointments.filter((appointment) => !appointment.companion).length;
+  const calendarDays = useMemo(() => monthDays(appointments), [appointments]);
+  const selectedAppointments = appointments.filter(
+    (appointment) => appointment.appointment_datetime.slice(0, 10) === selectedDate
+  );
 
   if (!user) return <AuthPanel onSignedIn={() => void refresh()} />;
 
@@ -132,15 +148,45 @@ export default function HomePage() {
         </section>
       ) : (
         <section className="calendar-card">
+          <div className="calendar-title">
+            <strong>{monthFormatter.format(new Date())}</strong>
+            <span>{appointments.length}件</span>
+          </div>
           <div className="calendar-grid header">
             {["日", "月", "火", "水", "木", "金", "土"].map((day) => <span key={day}>{day}</span>)}
           </div>
           <div className="calendar-grid">
-            {monthDays(appointments).map((day) => (
-              <div className={day.inMonth ? "calendar-day" : "calendar-day muted-day"} key={day.key}>
+            {calendarDays.map((day) => (
+              <button
+                aria-label={`${day.date.getDate()}日 ${day.count}件`}
+                className={[
+                  "calendar-day",
+                  day.inMonth ? "" : "muted-day",
+                  day.count > 0 ? "has-events" : "",
+                  day.isToday ? "today" : "",
+                  selectedDate === day.key ? "selected" : ""
+                ].filter(Boolean).join(" ")}
+                key={day.key}
+                onClick={() => setSelectedDate(day.key)}
+                type="button"
+              >
                 <span>{day.date.getDate()}</span>
-                {day.count > 0 && <strong>{day.count}件</strong>}
-              </div>
+                {day.count > 0 && <strong>{day.count}</strong>}
+              </button>
+            ))}
+          </div>
+          <div className="calendar-day-list">
+            <h2>{selectedDateFormatter.format(new Date(`${selectedDate}T00:00:00`))}</h2>
+            {selectedAppointments.length === 0 && <p className="muted">この日の予定はありません</p>}
+            {selectedAppointments.map((appointment) => (
+              <Link
+                className={appointment.companion ? "calendar-schedule" : "calendar-schedule urgent"}
+                href={`/appointments/${appointment.id}`}
+                key={appointment.id}
+              >
+                <strong>{timeFormatter.format(new Date(appointment.appointment_datetime))}</strong>
+                <span>{appointment.group.patient_name}さん / {appointment.hospital_name}</span>
+              </Link>
             ))}
           </div>
         </section>
