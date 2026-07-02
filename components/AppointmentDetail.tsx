@@ -1,11 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { FormEvent } from "react";
 import { useMemo, useState } from "react";
 import { CompanionForm } from "@/components/CompanionForm";
-import { deleteCompanion, getCurrentUser, saveCompanion, updateAppointmentStatus } from "@/lib/storage";
+import {
+  deleteAppointment,
+  deleteCompanion,
+  getCurrentUser,
+  saveCompanion,
+  updateAppointment,
+  updateAppointmentStatus
+} from "@/lib/storage";
 import { enabledReminderText, reminderTypeLabel } from "@/lib/reminders";
-import type { AppointmentCompanion, AppointmentStatus, AppointmentView } from "@/lib/types";
+import type { AppointmentCompanion, AppointmentStatus, AppointmentView, ReminderType } from "@/lib/types";
 
 type Props = {
   appointment: AppointmentView;
@@ -22,9 +31,27 @@ const dateFormatter = new Intl.DateTimeFormat("ja-JP", {
 });
 
 export function AppointmentDetail({ appointment: initialAppointment, shared = false }: Props) {
+  const router = useRouter();
   const [appointment, setAppointment] = useState(initialAppointment);
   const [copied, setCopied] = useState(false);
   const [editingCompanion, setEditingCompanion] = useState(false);
+  const [editingAppointment, setEditingAppointment] = useState(false);
+  const [savingAppointment, setSavingAppointment] = useState(false);
+  const [editForm, setEditForm] = useState({
+    hospital_name: initialAppointment.hospital_name,
+    department: initialAppointment.department,
+    appointment_datetime: initialAppointment.appointment_datetime.slice(0, 16),
+    items_to_bring: initialAppointment.items_to_bring,
+    memo: initialAppointment.memo,
+    reminders: {
+      one_week_before:
+        initialAppointment.reminders.find((reminder) => reminder.reminder_type === "one_week_before")?.enabled ?? true,
+      one_day_before:
+        initialAppointment.reminders.find((reminder) => reminder.reminder_type === "one_day_before")?.enabled ?? true,
+      same_day_morning:
+        initialAppointment.reminders.find((reminder) => reminder.reminder_type === "same_day_morning")?.enabled ?? true
+    } satisfies Record<ReminderType, boolean>
+  });
   const user = getCurrentUser();
   const shareUrl = useMemo(() => {
     if (typeof window === "undefined") return "";
@@ -70,6 +97,40 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
   async function setStatus(status: AppointmentStatus) {
     await updateAppointmentStatus(appointment.id, status);
     setAppointment((current) => ({ ...current, status }));
+  }
+
+  function updateEditForm<K extends keyof typeof editForm>(key: K, value: (typeof editForm)[K]) {
+    setEditForm((current) => ({ ...current, [key]: value }));
+  }
+
+  async function saveEditedAppointment(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSavingAppointment(true);
+    try {
+      await updateAppointment(appointment.id, editForm);
+      setAppointment((current) => ({
+        ...current,
+        hospital_name: editForm.hospital_name,
+        department: editForm.department,
+        appointment_datetime: editForm.appointment_datetime,
+        items_to_bring: editForm.items_to_bring,
+        memo: editForm.memo,
+        reminders: current.reminders.map((reminder) => ({
+          ...reminder,
+          enabled: editForm.reminders[reminder.reminder_type]
+        }))
+      }));
+      setEditingAppointment(false);
+    } finally {
+      setSavingAppointment(false);
+    }
+  }
+
+  async function removeAppointment() {
+    const ok = window.confirm("この通院予定を削除します。元に戻せません。");
+    if (!ok) return;
+    await deleteAppointment(appointment.id);
+    router.push("/");
   }
 
   const isPast = new Date(appointment.appointment_datetime).getTime() < Date.now();
@@ -153,12 +214,88 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
 
       {!shared && (
         <section className="action-grid">
+          <button className="secondary-action" onClick={() => setEditingAppointment((current) => !current)}>
+            {editingAppointment ? "編集を閉じる" : "予定を編集"}
+          </button>
+          <button className="danger-action" onClick={() => void removeAppointment()}>
+            予定を削除
+          </button>
           <a className="line-action" href={lineUrl} target="_blank" rel="noreferrer">
             LINEで予定共有
           </a>
           <button className="secondary-action" onClick={copyUrl}>
             {copied ? "コピーしました" : "共有URLをコピー"}
           </button>
+        </section>
+      )}
+
+      {editingAppointment && !shared && (
+        <section className="section-block compact">
+          <h2>予定を編集</h2>
+          <form className="inline-form" onSubmit={(event) => void saveEditedAppointment(event)}>
+            <label>
+              病院名
+              <input
+                required
+                value={editForm.hospital_name}
+                onChange={(event) => updateEditForm("hospital_name", event.target.value)}
+              />
+            </label>
+            <label>
+              診療科
+              <input
+                required
+                value={editForm.department}
+                onChange={(event) => updateEditForm("department", event.target.value)}
+              />
+            </label>
+            <label>
+              受診日時
+              <input
+                required
+                type="datetime-local"
+                value={editForm.appointment_datetime}
+                onChange={(event) => updateEditForm("appointment_datetime", event.target.value)}
+              />
+            </label>
+            <label>
+              持ち物
+              <textarea
+                rows={3}
+                value={editForm.items_to_bring}
+                onChange={(event) => updateEditForm("items_to_bring", event.target.value)}
+              />
+            </label>
+            <label>
+              メモ
+              <textarea rows={4} value={editForm.memo} onChange={(event) => updateEditForm("memo", event.target.value)} />
+            </label>
+            <fieldset className="reminder-fieldset">
+              <legend>リマインド設定</legend>
+              {[
+                ["one_week_before", "1週間前"],
+                ["one_day_before", "前日"],
+                ["same_day_morning", "当日朝"]
+              ].map(([key, label]) => (
+                <label className="switch-line" key={key}>
+                  <span>{label}</span>
+                  <input
+                    checked={editForm.reminders[key as ReminderType]}
+                    onChange={(event) =>
+                      updateEditForm("reminders", {
+                        ...editForm.reminders,
+                        [key]: event.target.checked
+                      })
+                    }
+                    type="checkbox"
+                  />
+                </label>
+              ))}
+            </fieldset>
+            <button className="primary-action full" disabled={savingAppointment} type="submit">
+              {savingAppointment ? "保存中..." : "変更を保存"}
+            </button>
+          </form>
         </section>
       )}
 

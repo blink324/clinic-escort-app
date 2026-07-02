@@ -453,6 +453,63 @@ export async function updateAppointmentStatus(id: string, status: AppointmentSta
   throwIfError(error);
 }
 
+export async function updateAppointment(
+  id: string,
+  input: Pick<AppointmentInput, "hospital_name" | "department" | "appointment_datetime" | "items_to_bring" | "memo" | "reminders">
+) {
+  if (!supabase) {
+    const updated = readJson<Appointment[]>(APPOINTMENTS_KEY, []).map((appointment) =>
+      appointment.id === id
+        ? {
+            ...appointment,
+            hospital_name: input.hospital_name,
+            department: input.department,
+            appointment_datetime: input.appointment_datetime,
+            items_to_bring: input.items_to_bring,
+            memo: input.memo,
+            updated_at: now()
+          }
+        : appointment
+    );
+    writeJson(APPOINTMENTS_KEY, updated);
+    await saveReminderSettings(id, input.appointment_datetime, input.reminders);
+    return;
+  }
+
+  const { error } = await supabase
+    .from("appointments")
+    .update({
+      hospital_name: input.hospital_name,
+      department: input.department,
+      appointment_datetime: input.appointment_datetime,
+      items_to_bring: input.items_to_bring,
+      memo: input.memo
+    })
+    .eq("id", id);
+  throwIfError(error);
+  await saveReminderSettings(id, input.appointment_datetime, input.reminders);
+}
+
+export async function deleteAppointment(id: string) {
+  if (!supabase) {
+    writeJson(
+      APPOINTMENTS_KEY,
+      readJson<Appointment[]>(APPOINTMENTS_KEY, []).filter((appointment) => appointment.id !== id)
+    );
+    writeJson(
+      COMPANIONS_KEY,
+      readJson<AppointmentCompanion[]>(COMPANIONS_KEY, []).filter((companion) => companion.appointment_id !== id)
+    );
+    writeJson(
+      REMINDERS_KEY,
+      readJson<ReminderSetting[]>(REMINDERS_KEY, []).filter((reminder) => reminder.appointment_id !== id)
+    );
+    return;
+  }
+  const { error } = await supabase.from("appointments").delete().eq("id", id);
+  throwIfError(error);
+}
+
 export async function saveCompanion(
   appointmentId: string,
   input: { display_name: string; contact?: string; comment?: string; user_id?: string | null }
