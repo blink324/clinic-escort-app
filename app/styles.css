@@ -226,6 +226,43 @@ button { cursor: pointer; }
 .action-grid.no-bottom { margin-bottom: 0; }
 .top-actions.single { grid-template-columns: 1fr; }
 
+.next-actions {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr;
+  margin-bottom: 14px;
+}
+
+.filter-row {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  margin: 12px 0 0;
+}
+
+.filter-row span {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.filter-chip {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text);
+  font-weight: 900;
+  min-height: 44px;
+  padding: 9px 14px;
+}
+
+.filter-chip.active {
+  background: #f7dce5;
+  border-color: var(--warning-border);
+  color: #9d2246;
+}
+
 .segmented {
   background: #e6edf8;
   border-radius: 8px;
@@ -329,6 +366,37 @@ button { cursor: pointer; }
   padding: 6px 9px;
   position: absolute;
   top: 8px;
+}
+
+.soon-badge {
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  border-radius: 999px;
+  color: #9a3412;
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1;
+  padding: 6px 9px;
+  position: absolute;
+  right: 10px;
+  top: 8px;
+}
+
+.schedule-card:has(.soon-badge),
+.calendar-schedule:has(.soon-badge) {
+  padding-top: 34px;
+}
+
+.schedule-card.self-escort:has(.soon-badge),
+.calendar-schedule.self-escort:has(.soon-badge) {
+  padding-top: 60px;
+}
+
+.schedule-card.self-escort:has(.soon-badge) .soon-badge,
+.calendar-schedule.self-escort:has(.soon-badge) .soon-badge {
+  left: 10px;
+  right: auto;
+  top: 34px;
 }
 
 .date-tile {

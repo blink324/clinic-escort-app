@@ -33,6 +33,19 @@ function bucketFor(dateValue: string) {
   return "来週以降";
 }
 
+function dayStatus(dateValue: string) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(dateValue);
+  const targetDay = new Date(target);
+  targetDay.setHours(0, 0, 0, 0);
+  const diffDays = Math.floor((targetDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return "今日";
+  if (diffDays === 1) return "明日";
+  if (diffDays > 1 && diffDays <= 3) return "もうすぐ";
+  return "";
+}
+
 function monthDays(appointments: AppointmentView[]) {
   const current = new Date();
   const todayKey = localDateKey(current);
@@ -63,6 +76,7 @@ export default function HomePage() {
   const [mode, setMode] = useState<"list" | "calendar">("list");
   const [selectedDate, setSelectedDate] = useState(localDateKey(new Date()));
   const [loading, setLoading] = useState(true);
+  const [showPendingOnly, setShowPendingOnly] = useState(false);
 
   async function refresh() {
     setLoading(true);
@@ -78,16 +92,19 @@ export default function HomePage() {
   }, []);
 
   const grouped = useMemo(() => {
-    return appointments.reduce<Record<string, AppointmentView[]>>((acc, appointment) => {
+    const visibleAppointments = showPendingOnly ? appointments.filter((appointment) => !appointment.companion) : appointments;
+    return visibleAppointments.reduce<Record<string, AppointmentView[]>>((acc, appointment) => {
       const bucket = bucketFor(appointment.appointment_datetime);
       acc[bucket] = [...(acc[bucket] || []), appointment];
       return acc;
     }, {});
-  }, [appointments]);
+  }, [appointments, showPendingOnly]);
 
   const pendingCount = appointments.filter((appointment) => !appointment.companion).length;
   const hasAppointments = appointments.length > 0;
-  const calendarDays = useMemo(() => monthDays(appointments), [appointments]);
+  const visibleCount = showPendingOnly ? pendingCount : appointments.length;
+  const calendarAppointments = showPendingOnly ? appointments.filter((appointment) => !appointment.companion) : appointments;
+  const calendarDays = useMemo(() => monthDays(calendarAppointments), [calendarAppointments]);
   const selectedAppointments = appointments.filter(
     (appointment) => appointment.appointment_datetime.slice(0, 10) === selectedDate
   );
@@ -137,10 +154,22 @@ export default function HomePage() {
       </div>
 
       {hasAppointments && (
-        <div className="segmented">
-          <button className={mode === "list" ? "active" : ""} onClick={() => setMode("list")}>一覧</button>
-          <button className={mode === "calendar" ? "active" : ""} onClick={() => setMode("calendar")}>カレンダー</button>
-        </div>
+        <>
+          <div className="filter-row">
+            <button
+              className={showPendingOnly ? "filter-chip active" : "filter-chip"}
+              onClick={() => setShowPendingOnly((current) => !current)}
+              type="button"
+            >
+              付き添い未定だけ
+            </button>
+            <span>{visibleCount}件表示</span>
+          </div>
+          <div className="segmented">
+            <button className={mode === "list" ? "active" : ""} onClick={() => setMode("list")}>一覧</button>
+            <button className={mode === "calendar" ? "active" : ""} onClick={() => setMode("calendar")}>カレンダー</button>
+          </div>
+        </>
       )}
 
       {loading ? (
@@ -171,6 +200,9 @@ export default function HomePage() {
                   key={appointment.id}
                 >
                   {isMyCompanion(appointment, user) && <span className="self-escort-badge">私が付き添い</span>}
+                  {dayStatus(appointment.appointment_datetime) && (
+                    <span className="soon-badge">{dayStatus(appointment.appointment_datetime)}</span>
+                  )}
                   <div className="date-tile">
                     <span>{dateFormatter.format(new Date(appointment.appointment_datetime))}</span>
                     <strong>{timeFormatter.format(new Date(appointment.appointment_datetime))}</strong>
@@ -192,7 +224,7 @@ export default function HomePage() {
         <section className="calendar-card">
           <div className="calendar-title">
             <strong>{monthFormatter.format(new Date())}</strong>
-            <span>{appointments.length}件</span>
+            <span>{visibleCount}件</span>
           </div>
           <div className="calendar-grid header">
             {["日", "月", "火", "水", "木", "金", "土"].map((day) => <span key={day}>{day}</span>)}
@@ -220,7 +252,7 @@ export default function HomePage() {
           <div className="calendar-day-list">
             <h2>{selectedDateFormatter.format(new Date(`${selectedDate}T00:00:00`))}</h2>
             {selectedAppointments.length === 0 && <p className="muted">この日の予定はありません</p>}
-            {selectedAppointments.map((appointment) => (
+            {(showPendingOnly ? selectedAppointments.filter((appointment) => !appointment.companion) : selectedAppointments).map((appointment) => (
               <Link
                 className={[
                   "calendar-schedule",
@@ -231,6 +263,9 @@ export default function HomePage() {
                 key={appointment.id}
               >
                 {isMyCompanion(appointment, user) && <span className="self-escort-badge">私が付き添い</span>}
+                {dayStatus(appointment.appointment_datetime) && (
+                  <span className="soon-badge">{dayStatus(appointment.appointment_datetime)}</span>
+                )}
                 <strong>{timeFormatter.format(new Date(appointment.appointment_datetime))}</strong>
                 <span>{appointment.group.patient_name}さん / {appointment.hospital_name}</span>
               </Link>

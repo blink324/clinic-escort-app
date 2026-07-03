@@ -10,12 +10,13 @@ import {
   deleteAppointment,
   deleteCompanion,
   getCurrentUser,
+  getGroupMembers,
   saveCompanion,
   updateAppointment,
   updateAppointmentStatus
 } from "@/lib/storage";
 import { enabledReminderText, reminderTypeLabel } from "@/lib/reminders";
-import type { AppointmentCompanion, AppointmentStatus, AppointmentView, ReminderType } from "@/lib/types";
+import type { AppointmentCompanion, AppointmentStatus, AppointmentView, GroupMember, ReminderType } from "@/lib/types";
 
 type Props = {
   appointment: AppointmentView;
@@ -37,6 +38,8 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
   const [copied, setCopied] = useState(false);
   const [editingCompanion, setEditingCompanion] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState(false);
+  const [selectingCompanion, setSelectingCompanion] = useState(false);
+  const [members, setMembers] = useState<GroupMember[]>([]);
   const [savingAppointment, setSavingAppointment] = useState(false);
   const [editForm, setEditForm] = useState({
     hospital_name: initialAppointment.hospital_name,
@@ -71,19 +74,28 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
       appointment.companion?.display_name || "未定"
     }さん\n\n確認する: ${shareUrl}`
   )}`;
+  const isMyCompanion = Boolean(user && appointment.companion?.user_id === user.id);
 
   useEffect(() => {
-    if (!editingAppointment) return;
+    if (!editingAppointment && !selectingCompanion) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [editingAppointment]);
+  }, [editingAppointment, selectingCompanion]);
+
+  useEffect(() => {
+    async function loadMembers() {
+      setMembers(await getGroupMembers(appointment.group_id));
+    }
+    void loadMembers();
+  }, [appointment.group_id]);
 
   function setCompanion(companion: AppointmentCompanion) {
     setAppointment((current) => ({ ...current, companion }));
     setEditingCompanion(false);
+    setSelectingCompanion(false);
   }
 
   async function removeCompanion() {
@@ -97,6 +109,16 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
       return;
     }
     setCompanion(await saveCompanion(appointment.id, { display_name: user.display_name, contact: user.email, user_id: user.id }));
+  }
+
+  async function assignMember(member: GroupMember) {
+    setCompanion(
+      await saveCompanion(appointment.id, {
+        display_name: member.display_name,
+        contact: member.contact,
+        user_id: member.user_id
+      })
+    );
   }
 
   async function copyUrl() {
@@ -171,12 +193,29 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
         </div>
       </section>
 
+      {!shared && (
+        <section className="next-actions">
+          {!appointment.companion && (
+            <button className="primary-action" onClick={() => void quickAssignMe()} type="button">
+              自分が付き添う
+            </button>
+          )}
+          <a className="line-action" href={lineUrl} target="_blank" rel="noreferrer">
+            LINEで共有
+          </a>
+          <button className="secondary-action" onClick={downloadCalendarFile} type="button">
+            カレンダー追加
+          </button>
+        </section>
+      )}
+
       <section className="focus-panel">
         <div>
           <h2>付き添い担当</h2>
           {appointment.companion ? (
             <div className="escort-box ready">
               <strong>{appointment.companion.display_name}さん</strong>
+              {isMyCompanion && <p>あなたが付き添い担当です。</p>}
               {appointment.companion.contact && <p>連絡先: {appointment.companion.contact}</p>}
               {appointment.companion.comment && <p>{appointment.companion.comment}</p>}
               <a className="line-action full notify-line" href={companionNoticeLineUrl} target="_blank" rel="noreferrer">
@@ -194,9 +233,11 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
           {!appointment.companion && <CompanionForm appointmentId={appointment.id} compact={shared} onSaved={setCompanion} />}
           {appointment.companion && (
             <>
-              <button className="secondary-action full" onClick={() => void quickAssignMe()}>
-                担当者を変更
-              </button>
+              {members.length > 1 || !isMyCompanion ? (
+                <button className="secondary-action full" onClick={() => setSelectingCompanion(true)}>
+                  担当者を変更
+                </button>
+              ) : null}
               <button className="danger-action full" onClick={() => void removeCompanion()}>
                 担当者を削除
               </button>
@@ -337,6 +378,37 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
                 {savingAppointment ? "保存中..." : "変更を保存"}
               </button>
             </form>
+          </section>
+        </div>
+      )}
+
+      {selectingCompanion && (
+        <div className="modal-backdrop top-modal" role="dialog" aria-modal="true" aria-labelledby="companion-select-title">
+          <section className="modal-panel">
+            <div className="modal-header">
+              <h2 id="companion-select-title">担当者を変更</h2>
+              <button className="text-button" onClick={() => setSelectingCompanion(false)} type="button">
+                閉じる
+              </button>
+            </div>
+            <div className="history-list">
+              {members.map((member) => (
+                <button className="history-card" key={member.id} onClick={() => void assignMember(member)} type="button">
+                  <strong>{member.display_name}</strong>
+                  <span>{member.contact || "連絡先未登録"}</span>
+                </button>
+              ))}
+              <button
+                className="secondary-action full"
+                onClick={() => {
+                  setSelectingCompanion(false);
+                  setEditingCompanion(true);
+                }}
+                type="button"
+              >
+                名前を入力して変更
+              </button>
+            </div>
           </section>
         </div>
       )}
