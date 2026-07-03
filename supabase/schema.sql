@@ -56,12 +56,37 @@ create table if not exists reminder_settings (
   unique (appointment_id, reminder_type)
 );
 
+create table if not exists notification_logs (
+  id uuid primary key default gen_random_uuid(),
+  appointment_id uuid not null references appointments(id) on delete cascade,
+  reminder_setting_id uuid references reminder_settings(id) on delete cascade,
+  notification_type text not null check (
+    notification_type in (
+      'reminder_one_week_before',
+      'reminder_one_day_before',
+      'reminder_same_day_morning',
+      'companion_assigned',
+      'companion_removed'
+    )
+  ),
+  channel text not null default 'line' check (channel in ('line')),
+  recipient_user_id uuid references auth.users(id) on delete set null,
+  line_user_id text,
+  sent_at timestamptz not null default now(),
+  created_at timestamptz not null default now()
+);
+
 create index if not exists patient_groups_invite_token_idx on patient_groups(invite_token);
 create index if not exists group_members_user_idx on group_members(user_id);
 create index if not exists appointments_group_datetime_idx on appointments(group_id, appointment_datetime);
 create index if not exists appointments_share_token_idx on appointments(share_token);
 create index if not exists appointment_companions_appointment_idx on appointment_companions(appointment_id);
 create index if not exists reminder_settings_appointment_idx on reminder_settings(appointment_id);
+create index if not exists reminder_settings_due_idx on reminder_settings(enabled, remind_at);
+create index if not exists notification_logs_appointment_idx on notification_logs(appointment_id);
+create unique index if not exists notification_logs_once_per_reminder_recipient_idx
+  on notification_logs(reminder_setting_id, recipient_user_id, channel)
+  where reminder_setting_id is not null and recipient_user_id is not null;
 create unique index if not exists appointment_companions_one_per_appointment_idx
   on appointment_companions(appointment_id);
 
@@ -70,6 +95,7 @@ alter table group_members enable row level security;
 alter table appointments enable row level security;
 alter table appointment_companions enable row level security;
 alter table reminder_settings enable row level security;
+alter table notification_logs enable row level security;
 
 create or replace function public.is_group_member(target_group_id uuid)
 returns boolean

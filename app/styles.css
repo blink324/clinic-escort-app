@@ -111,6 +111,12 @@ button { cursor: pointer; }
   cursor: not-allowed;
 }
 
+.line-notify-button.stop {
+  background: #eef4fb;
+  border: 1px solid #c8d8ec;
+  color: var(--primary-dark);
+}
+
 .text-button {
   background: transparent;
   border: 0;
@@ -389,7 +395,15 @@ button { cursor: pointer; }
 .schedule-card.self-escort {
   border-color: #8bb6f3;
   box-shadow: 0 14px 34px rgba(37, 99, 235, 0.12);
-  padding-top: 34px;
+}
+
+.status-badges {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  grid-column: 1 / -1;
+  margin-bottom: -2px;
 }
 
 .self-escort-badge {
@@ -397,44 +411,25 @@ button { cursor: pointer; }
   border: 1px solid #9fc3f8;
   border-radius: 999px;
   color: var(--primary-dark);
-  font-size: 0.72rem;
+  display: inline-flex;
+  font-size: 0.75rem;
   font-weight: 900;
-  left: 10px;
+  justify-content: center;
   line-height: 1;
   padding: 6px 9px;
-  position: absolute;
-  top: 8px;
 }
 
 .soon-badge {
-  background: #fff7ed;
-  border: 1px solid #fdba74;
+  background: #fdf2f8;
+  border: 1px solid #f9a8d4;
   border-radius: 999px;
-  color: #9a3412;
-  font-size: 0.72rem;
+  color: #9d174d;
+  display: inline-flex;
+  font-size: 0.75rem;
   font-weight: 900;
+  justify-content: center;
   line-height: 1;
   padding: 6px 9px;
-  position: absolute;
-  right: 10px;
-  top: 8px;
-}
-
-.schedule-card:has(.soon-badge),
-.calendar-schedule:has(.soon-badge) {
-  padding-top: 34px;
-}
-
-.schedule-card.self-escort:has(.soon-badge),
-.calendar-schedule.self-escort:has(.soon-badge) {
-  padding-top: 60px;
-}
-
-.schedule-card.self-escort:has(.soon-badge) .soon-badge,
-.calendar-schedule.self-escort:has(.soon-badge) .soon-badge {
-  left: 10px;
-  right: auto;
-  top: 34px;
 }
 
 .date-tile {
@@ -611,7 +606,6 @@ button { cursor: pointer; }
 
 .calendar-schedule.self-escort {
   border-color: #8bb6f3;
-  padding-top: 34px;
 }
 
 .calendar-schedule strong {

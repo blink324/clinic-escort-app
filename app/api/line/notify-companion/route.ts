@@ -66,15 +66,23 @@ async function pushLineMessage(lineUserId: string, text: string) {
   }
 }
 
+type NotificationAction = "assigned" | "removed";
+
 export async function POST(request: Request) {
   const supabase = adminClient();
   if (!supabase) {
     return NextResponse.json({ error: "SUPABASE_SERVICE_ROLE_KEY is not set" }, { status: 500 });
   }
 
-  const { appointmentId } = (await request.json()) as { appointmentId?: string };
+  const { action = "assigned", appointmentId } = (await request.json()) as {
+    action?: NotificationAction;
+    appointmentId?: string;
+  };
   if (!appointmentId) {
     return NextResponse.json({ error: "appointmentId is required" }, { status: 400 });
+  }
+  if (action !== "assigned" && action !== "removed") {
+    return NextResponse.json({ error: "invalid action" }, { status: 400 });
   }
 
   const { data: appointment, error: appointmentError } = await supabase
@@ -94,7 +102,7 @@ export async function POST(request: Request) {
   if (companionError) {
     return NextResponse.json({ error: companionError.message }, { status: 500 });
   }
-  if (!companion) {
+  if (!companion && action === "assigned") {
     return NextResponse.json({ sent: 0, skipped: "companion not set" });
   }
 
@@ -137,10 +145,15 @@ export async function POST(request: Request) {
 
   const results = await Promise.allSettled(
     (connections || []).map((connection) => {
-      const isAssignedPerson = companion.user_id && connection.user_id === companion.user_id;
-      const heading = isAssignedPerson
-        ? "あなたが付き添い担当になりました"
-        : `付き添い担当が${companion.display_name}さんに決まりました`;
+      const isAssignedPerson = companion?.user_id && connection.user_id === companion.user_id;
+      const heading =
+        action === "removed"
+          ? isAssignedPerson
+            ? "あなたの付き添い担当が削除されました"
+            : `付き添い担当が${companion?.display_name ? `${companion.display_name}さんから` : ""}未定に戻りました`
+          : isAssignedPerson
+            ? "あなたが付き添い担当になりました"
+            : `付き添い担当が${companion?.display_name}さんに決まりました`;
       const text = [
         heading,
         "",

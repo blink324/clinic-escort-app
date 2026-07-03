@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CompanionForm } from "@/components/CompanionForm";
 import { LineNotificationButton } from "@/components/LineNotificationButton";
 import { calendarFileName, createIcsFile, googleCalendarUrl } from "@/lib/calendar";
-import { notifyCompanionAssigned } from "@/lib/line-notify-client";
+import { notifyCompanionAssigned, notifyCompanionRemoved } from "@/lib/line-notify-client";
 import {
   deleteAppointment,
   deleteCompanion,
@@ -102,6 +102,7 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
   }
 
   async function removeCompanion() {
+    await notifyCompanionRemoved(appointment.id);
     await deleteCompanion(appointment.id);
     setAppointment((current) => ({ ...current, companion: undefined }));
   }

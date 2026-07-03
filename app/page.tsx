@@ -208,9 +208,13 @@ export default function HomePage() {
                   href={`/appointments/${appointment.id}`}
                   key={appointment.id}
                 >
-                  {isMyCompanion(appointment, user) && <span className="self-escort-badge">私が付き添い</span>}
-                  {dayStatus(appointment.appointment_datetime) && (
-                    <span className="soon-badge">{dayStatus(appointment.appointment_datetime)}</span>
+                  {(isMyCompanion(appointment, user) || dayStatus(appointment.appointment_datetime)) && (
+                    <div className="status-badges">
+                      {isMyCompanion(appointment, user) && <span className="self-escort-badge">私が付き添い</span>}
+                      {dayStatus(appointment.appointment_datetime) && (
+                        <span className="soon-badge">{dayStatus(appointment.appointment_datetime)}</span>
+                      )}
+                    </div>
                   )}
                   <div className="date-tile">
                     <span>{dateFormatter.format(new Date(appointment.appointment_datetime))}</span>
@@ -271,9 +275,13 @@ export default function HomePage() {
                 href={`/appointments/${appointment.id}`}
                 key={appointment.id}
               >
-                {isMyCompanion(appointment, user) && <span className="self-escort-badge">私が付き添い</span>}
-                {dayStatus(appointment.appointment_datetime) && (
-                  <span className="soon-badge">{dayStatus(appointment.appointment_datetime)}</span>
+                {(isMyCompanion(appointment, user) || dayStatus(appointment.appointment_datetime)) && (
+                  <div className="status-badges">
+                    {isMyCompanion(appointment, user) && <span className="self-escort-badge">私が付き添い</span>}
+                    {dayStatus(appointment.appointment_datetime) && (
+                      <span className="soon-badge">{dayStatus(appointment.appointment_datetime)}</span>
+                    )}
+                  </div>
                 )}
                 <strong>{timeFormatter.format(new Date(appointment.appointment_datetime))}</strong>
                 <span>{appointment.group.patient_name}さん / {appointment.hospital_name}</span>
