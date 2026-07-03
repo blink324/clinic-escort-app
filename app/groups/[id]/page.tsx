@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { updateDisplayName } from "@/lib/auth";
-import { getAppointments, getCurrentUser, getGroup, getGroupMembers, updateGroup } from "@/lib/storage";
+import { getAppointments, getCurrentUser, getGroup, getGroupMembers, leaveGroup, updateGroup } from "@/lib/storage";
 import type { AppointmentView, GroupMember, PatientGroup } from "@/lib/types";
 
 const dateFormatter = new Intl.DateTimeFormat("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -17,15 +17,20 @@ const roleLabels = {
 
 export default function GroupDetailPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const [group, setGroup] = useState<PatientGroup | null>();
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [appointments, setAppointments] = useState<AppointmentView[]>([]);
   const [copied, setCopied] = useState(false);
   const [savingName, setSavingName] = useState(false);
   const [savingGroup, setSavingGroup] = useState(false);
+  const [leaving, setLeaving] = useState(false);
   const [nameMessage, setNameMessage] = useState("");
   const [groupMessage, setGroupMessage] = useState("");
   const [myName, setMyName] = useState("");
+  const [currentUserId, setCurrentUserId] = useState("");
+  const [editingName, setEditingName] = useState(false);
+  const [editingGroup, setEditingGroup] = useState(false);
   const [groupForm, setGroupForm] = useState({ patient_name: "", group_name: "", memo: "" });
 
   useEffect(() => {
@@ -38,7 +43,9 @@ export default function GroupDetailPage() {
         group_name: nextGroup?.group_name || "",
         memo: nextGroup?.memo || ""
       });
-      setMyName(getCurrentUser()?.display_name || "");
+      const currentUser = getCurrentUser();
+      setMyName(currentUser?.display_name || "");
+      setCurrentUserId(currentUser?.id || "");
       setMembers(await getGroupMembers(params.id));
       setAppointments((await getAppointments()).filter((appointment) => appointment.group_id === params.id));
     }
@@ -68,6 +75,7 @@ export default function GroupDetailPage() {
         current.map((member) => (member.user_id === user.id ? { ...member, display_name: user.display_name } : member))
       );
       setNameMessage("名前を更新しました");
+      setEditingName(false);
     } catch (caught) {
       setNameMessage(caught instanceof Error ? caught.message : "名前を更新できませんでした");
     } finally {
@@ -91,10 +99,24 @@ export default function GroupDetailPage() {
         });
       }
       setGroupMessage("共有先を更新しました");
+      setEditingGroup(false);
     } catch (caught) {
       setGroupMessage(caught instanceof Error ? caught.message : "共有先を更新できませんでした");
     } finally {
       setSavingGroup(false);
+    }
+  }
+
+  async function leaveCurrentGroup() {
+    if (!group) return;
+    const ok = window.confirm(`${group.group_name}から抜けます。よろしいですか？`);
+    if (!ok) return;
+    setLeaving(true);
+    try {
+      await leaveGroup(group.id);
+      router.push("/groups");
+    } finally {
+      setLeaving(false);
     }
   }
 
@@ -112,9 +134,12 @@ export default function GroupDetailPage() {
     <main className="mobile-shell with-nav">
       <Link className="back-link" href="/groups">共有先へ戻る</Link>
       <section className="detail-hero">
-        <p className="eyebrow">{group.relation}</p>
+        <p className="eyebrow">通院共有</p>
         <h1>{group.group_name}</h1>
         <p className="lead">{group.memo || "家族で通院予定と付き添い担当を共有します。"}</p>
+        <button className="secondary-action full hero-edit-action" onClick={() => setEditingGroup(true)} type="button">
+          名前を変更
+        </button>
       </section>
 
       <section className="section-block compact">
@@ -135,26 +160,24 @@ export default function GroupDetailPage() {
         </div>
         <div className="member-list">
           {members.map((member) => (
-            <div key={member.id}>
+            <button
+              className={member.user_id === currentUserId ? "member-row editable" : "member-row"}
+              disabled={member.user_id !== currentUserId}
+              key={member.id}
+              onClick={() => {
+                if (member.user_id === currentUserId) {
+                  setMyName(member.display_name);
+                  setNameMessage("");
+                  setEditingName(true);
+                }
+              }}
+              type="button"
+            >
               <strong>{member.display_name}</strong>
-              <span>{roleLabels[member.role]}</span>
-            </div>
+              <span>{member.user_id === currentUserId ? "自分・変更" : roleLabels[member.role]}</span>
+            </button>
           ))}
         </div>
-      </section>
-
-      <section className="section-block compact">
-        <h2>自分の名前</h2>
-        <form className="inline-form compact-form" onSubmit={(event) => void saveMyName(event)}>
-          <label>
-            メンバーに表示する名前
-            <input required value={myName} onChange={(event) => setMyName(event.target.value)} />
-          </label>
-          {nameMessage && <p className="notice-text">{nameMessage}</p>}
-          <button className="secondary-action full" disabled={savingName} type="submit">
-            {savingName ? "更新中..." : "名前を更新"}
-          </button>
-        </form>
       </section>
 
       <section className="section-block compact">
@@ -173,38 +196,78 @@ export default function GroupDetailPage() {
       </section>
 
       <section className="section-block compact">
-        <h2>共有設定</h2>
-        <form className="inline-form compact-form" onSubmit={(event) => void saveGroup(event)}>
-          <label>
-            患者名
-            <input
-              required
-              value={groupForm.patient_name}
-              onChange={(event) => setGroupForm((current) => ({ ...current, patient_name: event.target.value }))}
-            />
-          </label>
-          <label>
-            共有先の名前
-            <input
-              required
-              value={groupForm.group_name}
-              onChange={(event) => setGroupForm((current) => ({ ...current, group_name: event.target.value }))}
-            />
-          </label>
-          <label>
-            メモ
-            <textarea
-              rows={3}
-              value={groupForm.memo}
-              onChange={(event) => setGroupForm((current) => ({ ...current, memo: event.target.value }))}
-            />
-          </label>
-          {groupMessage && <p className="notice-text">{groupMessage}</p>}
-          <button className="secondary-action full" disabled={savingGroup} type="submit">
-            {savingGroup ? "更新中..." : "共有先を更新"}
-          </button>
-        </form>
+        <h2>この共有先から抜ける</h2>
+        <p className="muted">抜けると、この共有先の予定は自分の画面に表示されなくなります。</p>
+        <button className="danger-action full compact-form" disabled={leaving} onClick={() => void leaveCurrentGroup()} type="button">
+          {leaving ? "処理中..." : "共有先から抜ける"}
+        </button>
       </section>
+
+      {editingName && (
+        <div className="modal-backdrop top-modal" role="dialog" aria-modal="true" aria-labelledby="member-name-title">
+          <section className="modal-panel">
+            <div className="modal-header">
+              <h2 id="member-name-title">自分の名前を変更</h2>
+              <button className="text-button" onClick={() => setEditingName(false)} type="button">
+                閉じる
+              </button>
+            </div>
+            <form className="inline-form" onSubmit={(event) => void saveMyName(event)}>
+              <label>
+                メンバーに表示する名前
+                <input required value={myName} onChange={(event) => setMyName(event.target.value)} />
+              </label>
+              {nameMessage && <p className="notice-text">{nameMessage}</p>}
+              <button className="primary-action full" disabled={savingName} type="submit">
+                {savingName ? "更新中..." : "名前を更新"}
+              </button>
+            </form>
+          </section>
+        </div>
+      )}
+
+      {editingGroup && (
+        <div className="modal-backdrop top-modal" role="dialog" aria-modal="true" aria-labelledby="group-name-title">
+          <section className="modal-panel">
+            <div className="modal-header">
+              <h2 id="group-name-title">共有先の名前を変更</h2>
+              <button className="text-button" onClick={() => setEditingGroup(false)} type="button">
+                閉じる
+              </button>
+            </div>
+            <form className="inline-form" onSubmit={(event) => void saveGroup(event)}>
+              <label>
+                患者名
+                <input
+                  required
+                  value={groupForm.patient_name}
+                  onChange={(event) => setGroupForm((current) => ({ ...current, patient_name: event.target.value }))}
+                />
+              </label>
+              <label>
+                共有先の名前
+                <input
+                  required
+                  value={groupForm.group_name}
+                  onChange={(event) => setGroupForm((current) => ({ ...current, group_name: event.target.value }))}
+                />
+              </label>
+              <label>
+                メモ
+                <textarea
+                  rows={3}
+                  value={groupForm.memo}
+                  onChange={(event) => setGroupForm((current) => ({ ...current, memo: event.target.value }))}
+                />
+              </label>
+              {groupMessage && <p className="notice-text">{groupMessage}</p>}
+              <button className="primary-action full" disabled={savingGroup} type="submit">
+                {savingGroup ? "更新中..." : "共有先を更新"}
+              </button>
+            </form>
+          </section>
+        </div>
+      )}
       <BottomNav />
     </main>
   );

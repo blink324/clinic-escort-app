@@ -157,7 +157,7 @@ async function localGroups() {
   const groups = readJson<PatientGroup[]>(GROUPS_KEY, []);
   const memberships = readJson<GroupMember[]>(MEMBERS_KEY, []);
   const groupIds = memberships.filter((member) => member.user_id === user.id).map((member) => member.group_id);
-  return groups.filter((group) => group.owner_user_id === user.id || groupIds.includes(group.id));
+  return groups.filter((group) => groupIds.includes(group.id));
 }
 
 export async function getGroups() {
@@ -353,6 +353,22 @@ export async function joinGroup(inviteToken: string) {
   );
   throwIfError(error);
   return group;
+}
+
+export async function leaveGroup(groupId: string) {
+  const user = getCurrentUser();
+  if (!user) throw new Error("ログインが必要です");
+
+  if (!supabase) {
+    const members = readJson<GroupMember[]>(MEMBERS_KEY, []).filter(
+      (member) => !(member.group_id === groupId && member.user_id === user.id)
+    );
+    writeJson(MEMBERS_KEY, members);
+    return;
+  }
+
+  const { error } = await supabase.from("group_members").delete().eq("group_id", groupId).eq("user_id", user.id);
+  throwIfError(error);
 }
 
 async function buildAppointmentViews(appointments: Appointment[], groups: PatientGroup[]) {

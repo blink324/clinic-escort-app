@@ -53,6 +53,10 @@ function monthDays(appointments: AppointmentView[]) {
   });
 }
 
+function isMyCompanion(appointment: AppointmentView, user: AuthUser) {
+  return appointment.companion?.user_id === user.id;
+}
+
 export default function HomePage() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [appointments, setAppointments] = useState<AppointmentView[]>([]);
@@ -158,10 +162,15 @@ export default function HomePage() {
               {(grouped[bucket] || []).length === 0 && <p className="muted">予定はありません</p>}
               {(grouped[bucket] || []).map((appointment) => (
                 <Link
-                  className={appointment.companion ? "schedule-card" : "schedule-card urgent"}
+                  className={[
+                    "schedule-card",
+                    appointment.companion ? "" : "urgent",
+                    isMyCompanion(appointment, user) ? "self-escort" : ""
+                  ].filter(Boolean).join(" ")}
                   href={`/appointments/${appointment.id}`}
                   key={appointment.id}
                 >
+                  {isMyCompanion(appointment, user) && <span className="self-escort-badge">私が付き添い</span>}
                   <div className="date-tile">
                     <span>{dateFormatter.format(new Date(appointment.appointment_datetime))}</span>
                     <strong>{timeFormatter.format(new Date(appointment.appointment_datetime))}</strong>
@@ -213,10 +222,15 @@ export default function HomePage() {
             {selectedAppointments.length === 0 && <p className="muted">この日の予定はありません</p>}
             {selectedAppointments.map((appointment) => (
               <Link
-                className={appointment.companion ? "calendar-schedule" : "calendar-schedule urgent"}
+                className={[
+                  "calendar-schedule",
+                  appointment.companion ? "" : "urgent",
+                  isMyCompanion(appointment, user) ? "self-escort" : ""
+                ].filter(Boolean).join(" ")}
                 href={`/appointments/${appointment.id}`}
                 key={appointment.id}
               >
+                {isMyCompanion(appointment, user) && <span className="self-escort-badge">私が付き添い</span>}
                 <strong>{timeFormatter.format(new Date(appointment.appointment_datetime))}</strong>
                 <span>{appointment.group.patient_name}さん / {appointment.hospital_name}</span>
               </Link>

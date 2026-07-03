@@ -303,11 +303,32 @@ button { cursor: pointer; }
   gap: 12px;
   grid-template-columns: 82px 1fr;
   padding: 14px;
+  position: relative;
 }
 
 .schedule-card.urgent {
   background: linear-gradient(90deg, var(--warning), var(--surface));
   border-color: var(--warning-border);
+}
+
+.schedule-card.self-escort {
+  border-color: #8bb6f3;
+  box-shadow: 0 14px 34px rgba(37, 99, 235, 0.12);
+  padding-top: 34px;
+}
+
+.self-escort-badge {
+  background: #dbeafe;
+  border: 1px solid #9fc3f8;
+  border-radius: 999px;
+  color: var(--primary-dark);
+  font-size: 0.72rem;
+  font-weight: 900;
+  left: 10px;
+  line-height: 1;
+  padding: 6px 9px;
+  position: absolute;
+  top: 8px;
 }
 
 .date-tile {
@@ -474,11 +495,17 @@ button { cursor: pointer; }
   display: grid;
   gap: 4px;
   padding: 12px;
+  position: relative;
 }
 
 .calendar-schedule.urgent {
   background: var(--warning);
   border-color: var(--warning-border);
+}
+
+.calendar-schedule.self-escort {
+  border-color: #8bb6f3;
+  padding-top: 34px;
 }
 
 .calendar-schedule strong {
@@ -581,6 +608,49 @@ textarea { line-height: 1.6; resize: vertical; }
   place-items: center;
 }
 
+.history-prompt {
+  align-items: center;
+  background: #f7faff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr auto;
+  padding: 14px;
+}
+
+.history-prompt p {
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 4px 0 0;
+}
+
+.history-list {
+  display: grid;
+  gap: 10px;
+}
+
+.history-card {
+  background: #f7faff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  display: grid;
+  gap: 5px;
+  padding: 14px;
+  text-align: left;
+}
+
+.history-card strong {
+  font-size: 1.08rem;
+}
+
+.history-card span,
+.history-card small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
 .reservation-preview,
 .reservation-image {
   background: white;
@@ -643,20 +713,37 @@ textarea { line-height: 1.6; resize: vertical; }
 .section-heading h2 { margin: 0; }
 .section-heading span, .section-heading a { color: var(--primary); font-weight: 800; }
 
-.member-list div,
+.member-row,
 .mini-schedules a {
   align-items: center;
   background: #eef4ff;
+  border: 0;
   border-radius: 8px;
+  color: var(--text);
   display: flex;
   justify-content: space-between;
   padding: 12px;
+  text-align: left;
+}
+
+.member-row.editable {
+  background: #eaf2ff;
+  border: 1px solid #b9cff7;
+}
+
+.member-row:disabled {
+  cursor: default;
+  opacity: 1;
 }
 
 .member-list span,
 .mini-schedules span {
   color: var(--muted);
   font-weight: 800;
+}
+
+.hero-edit-action {
+  margin-top: 14px;
 }
 
 .group-card {
@@ -716,6 +803,11 @@ textarea { line-height: 1.6; resize: vertical; }
   padding: 14px;
   position: fixed;
   z-index: 80;
+}
+
+.modal-backdrop.top-modal {
+  align-items: flex-start;
+  padding-top: 18px;
 }
 
 .modal-panel {

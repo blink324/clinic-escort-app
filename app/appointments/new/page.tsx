@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
-import { createGroup, getGroups, saveAppointment } from "@/lib/storage";
-import type { AppointmentInput, PatientGroup, ReminderType } from "@/lib/types";
+import { createGroup, getAppointments, getGroups, saveAppointment } from "@/lib/storage";
+import type { AppointmentInput, AppointmentView, PatientGroup, ReminderType } from "@/lib/types";
 
 const reminderTypes: { key: ReminderType; label: string }[] = [
   { key: "one_week_before", label: "1週間前" },
@@ -16,6 +16,8 @@ const reminderTypes: { key: ReminderType; label: string }[] = [
 export default function NewAppointmentPage() {
   const router = useRouter();
   const [groups, setGroups] = useState<PatientGroup[]>([]);
+  const [history, setHistory] = useState<AppointmentView[]>([]);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [groupMode, setGroupMode] = useState<"existing" | "new">("new");
   const [patientName, setPatientName] = useState("");
@@ -35,8 +37,10 @@ export default function NewAppointmentPage() {
   useEffect(() => {
     async function loadGroups() {
       const nextGroups = await getGroups();
+      const nextAppointments = await getAppointments();
       const urlGroup = new URLSearchParams(window.location.search).get("group");
       setGroups(nextGroups);
+      setHistory(nextAppointments);
       setGroupMode(urlGroup || nextGroups.length > 0 ? "existing" : "new");
       setForm((current) => ({ ...current, group_id: urlGroup || nextGroups[0]?.id || "" }));
     }
@@ -45,6 +49,27 @@ export default function NewAppointmentPage() {
 
   function update<K extends keyof AppointmentInput>(key: K, value: AppointmentInput[K]) {
     setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  const appointmentHistory = useMemo(() => {
+    const seen = new Set<string>();
+    return history.filter((appointment) => {
+      const key = `${appointment.hospital_name}__${appointment.department}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [history]);
+
+  function applyHistory(appointment: AppointmentView) {
+    setForm((current) => ({
+      ...current,
+      hospital_name: appointment.hospital_name,
+      department: appointment.department,
+      items_to_bring: appointment.items_to_bring,
+      memo: appointment.memo
+    }));
+    setHistoryOpen(false);
   }
 
   function handleImage(file?: File) {
@@ -154,6 +179,15 @@ export default function NewAppointmentPage() {
             )}
           </>
         )}
+        <section className="history-prompt">
+          <div>
+            <strong>前と同じ病院なら</strong>
+            <p>過去の予定から病院名や診療科を呼び出せます。</p>
+          </div>
+          <button className="secondary-action small" onClick={() => setHistoryOpen(true)} type="button">
+            履歴
+          </button>
+        </section>
         <label>
           病院名
           <input required value={form.hospital_name} onChange={(event) => update("hospital_name", event.target.value)} />
@@ -202,6 +236,35 @@ export default function NewAppointmentPage() {
           {saving ? "登録中..." : "登録する"}
         </button>
       </form>
+
+      {historyOpen && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="history-title">
+          <section className="modal-panel">
+            <div className="modal-header">
+              <h2 id="history-title">予約履歴から選ぶ</h2>
+              <button className="text-button" onClick={() => setHistoryOpen(false)} type="button">
+                閉じる
+              </button>
+            </div>
+            <div className="history-list">
+              {appointmentHistory.length === 0 ? (
+                <div className="empty-state">
+                  <h2>まだ履歴がありません</h2>
+                  <p>予定を登録すると、次回からここに表示されます。</p>
+                </div>
+              ) : (
+                appointmentHistory.map((appointment) => (
+                  <button className="history-card" key={appointment.id} onClick={() => applyHistory(appointment)} type="button">
+                    <strong>{appointment.hospital_name}</strong>
+                    <span>{appointment.department}</span>
+                    <small>{appointment.group.patient_name}さんの過去予定</small>
+                  </button>
+                ))
+              )}
+            </div>
+          </section>
+        </div>
+      )}
       <BottomNav />
     </main>
   );
