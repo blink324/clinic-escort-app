@@ -229,6 +229,37 @@ button { cursor: pointer; }
 .auth-card { max-width: 520px; width: 100%; }
 .detail-hero { margin-bottom: 14px; }
 .detail-hero.needs-escort { background: linear-gradient(135deg, #ffffff, var(--warning)); border-color: var(--warning-border); }
+.visit-place {
+  background: #ffffff;
+  border: 2px solid #b9cff7;
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  margin: 18px 0 14px;
+  padding: 18px;
+}
+
+.visit-place strong {
+  color: var(--text);
+  font-size: 1.78rem;
+  line-height: 1.18;
+}
+
+.visit-place span {
+  color: var(--primary-dark);
+  font-size: 1.24rem;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.shared-detail .visit-place strong {
+  font-size: 2rem;
+}
+
+.shared-detail .visit-place span {
+  font-size: 1.34rem;
+}
+
 .large-date { font-size: 1.22rem; font-weight: 800; margin: 12px 0; }
 
 .attention-panel {
