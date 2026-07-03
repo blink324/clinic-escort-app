@@ -263,17 +263,19 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
           <h2>メモ</h2>
           <p>{appointment.memo || "未登録"}</p>
         </div>
-        <div className="info-panel">
-          <h2>リマインド</h2>
-          <p>{enabledReminderText(appointment)}</p>
-          <div className="mini-list">
-            {appointment.reminders.map((reminder) => (
-              <span key={reminder.id} className={reminder.enabled ? "mini-pill on" : "mini-pill"}>
-                {reminderTypeLabel[reminder.reminder_type]} {reminder.enabled ? "ON" : "OFF"}
-              </span>
-            ))}
+        {!shared && (
+          <div className="info-panel">
+            <h2>リマインド</h2>
+            <p>{enabledReminderText(appointment)}</p>
+            <div className="mini-list">
+              {appointment.reminders.map((reminder) => (
+                <span key={reminder.id} className={reminder.enabled ? "mini-pill on" : "mini-pill"}>
+                  {reminderTypeLabel[reminder.reminder_type]} {reminder.enabled ? "ON" : "OFF"}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </section>
 
       {appointment.reservation_image_url && (

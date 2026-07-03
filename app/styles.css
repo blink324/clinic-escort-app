@@ -921,6 +921,37 @@ textarea { line-height: 1.6; resize: vertical; }
   margin-bottom: 12px;
 }
 
+.share-visit-summary {
+  background: #ffffff;
+  border: 2px solid #9fc3f8;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 7px;
+  margin-bottom: 14px;
+  padding: 18px;
+}
+
+.share-visit-summary p {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 900;
+  margin: 0;
+}
+
+.share-visit-summary strong {
+  color: var(--text);
+  font-size: 2rem;
+  line-height: 1.18;
+}
+
+.share-visit-summary span {
+  color: var(--primary-dark);
+  font-size: 1.34rem;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
 .error-text { color: var(--danger) !important; font-weight: 800; }
 .notice-text { color: var(--primary-dark) !important; font-weight: 800; }
 

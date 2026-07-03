@@ -32,7 +32,11 @@ export default function SharePage() {
 
   return (
     <main className="mobile-shell">
-      <div className="share-notice">LINE共有から開ける付き添い調整ページです</div>
+      <section className="share-visit-summary" aria-label="通院先">
+        <p>{appointment.group.patient_name}さんの通院先</p>
+        <strong>{appointment.hospital_name}</strong>
+        <span>{appointment.department}</span>
+      </section>
       <AppointmentDetail appointment={appointment} shared />
     </main>
   );
