@@ -64,7 +64,7 @@ export default function NewAppointmentPage() {
         const group = await createGroup({
           patient_name: patientName,
           relation: selectedRelation || "本人",
-          group_name: `${patientName}の通院グループ`,
+          group_name: `${patientName}の共有先`,
           memo: ""
         });
         groupId = group.id;
@@ -91,7 +91,7 @@ export default function NewAppointmentPage() {
           <fieldset className="reminder-fieldset">
             <legend>患者</legend>
             <label className="switch-line">
-              <span>登録済みグループから選ぶ</span>
+              <span>登録済みの共有先から選ぶ</span>
               <input
                 checked={groupMode === "existing"}
                 name="group-mode"
@@ -100,7 +100,7 @@ export default function NewAppointmentPage() {
               />
             </label>
             <label className="switch-line">
-              <span>患者名を入力する</span>
+              <span>新しく患者名を入力する</span>
               <input
                 checked={groupMode === "new"}
                 name="group-mode"
@@ -113,7 +113,7 @@ export default function NewAppointmentPage() {
 
         {groupMode === "existing" && groups.length > 0 ? (
           <label>
-            患者グループ
+            共有先
             <select required value={form.group_id} onChange={(event) => update("group_id", event.target.value)}>
               {groups.map((group) => (
                 <option key={group.id} value={group.id}>{group.group_name}</option>

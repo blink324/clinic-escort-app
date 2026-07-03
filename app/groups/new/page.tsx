@@ -23,7 +23,7 @@ export default function NewGroupPage() {
       const group = await createGroup({
         patient_name: patientName,
         relation: selectedRelation,
-        group_name: groupName || `${patientName}の通院グループ`,
+        group_name: groupName || `${patientName}の共有先`,
         memo
       });
       router.push(`/groups/${group.id}`);
@@ -36,11 +36,16 @@ export default function NewGroupPage() {
     <main className="mobile-shell with-nav">
       <header className="app-header">
         <div>
-          <p className="eyebrow">グループ作成</p>
-          <h1>患者グループを作る</h1>
+          <p className="eyebrow">家族共有</p>
+          <h1>共有先を作る</h1>
         </div>
         <Link className="text-button" href="/groups">戻る</Link>
       </header>
+
+      <section className="attention-panel calm">
+        <strong>通院予定の登録からも自動で作れます</strong>
+        <p>先に予定を入れたい場合は、予定登録から始めるのがおすすめです。</p>
+      </section>
 
       <form className="form-grid" onSubmit={submit}>
         <label>
@@ -73,8 +78,8 @@ export default function NewGroupPage() {
           </label>
         )}
         <label>
-          グループ名
-          <input value={groupName} onChange={(event) => setGroupName(event.target.value)} placeholder="母の通院グループ" />
+          共有先の名前
+          <input value={groupName} onChange={(event) => setGroupName(event.target.value)} placeholder="母の共有先" />
         </label>
         <label>
           メモ

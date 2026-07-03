@@ -11,7 +11,7 @@ export function BottomNav() {
         <span>予定</span>
       </Link>
       <Link className={pathname.startsWith("/groups") ? "active" : ""} href="/groups">
-        <span>グループ</span>
+        <span>共有先</span>
       </Link>
     </nav>
   );

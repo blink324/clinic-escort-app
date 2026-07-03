@@ -37,15 +37,15 @@ export default function InvitePage() {
   return (
     <main className="mobile-shell">
       <section className="auth-card">
-        <p className="eyebrow">グループ招待</p>
+        <p className="eyebrow">家族共有の招待</p>
         {group ? (
           <>
             <h1>{group.group_name}</h1>
             <p>{group.patient_name}さんの通院予定と付き添い担当を一緒に確認できます。</p>
             {joined ? (
-              <Link className="primary-action full" href={`/groups/${group.id}`}>グループを開く</Link>
+              <Link className="primary-action full" href={`/groups/${group.id}`}>共有先を開く</Link>
             ) : (
-              <button className="primary-action full" onClick={() => void join()}>このグループに参加する</button>
+              <button className="primary-action full" onClick={() => void join()}>この共有先に参加する</button>
             )}
           </>
         ) : (

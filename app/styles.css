@@ -224,6 +224,7 @@ button { cursor: pointer; }
 }
 
 .action-grid.no-bottom { margin-bottom: 0; }
+.top-actions.single { grid-template-columns: 1fr; }
 
 .segmented {
   background: #e6edf8;
@@ -682,6 +683,16 @@ textarea { line-height: 1.6; resize: vertical; }
   border-radius: 8px;
   padding: 20px;
   text-align: center;
+}
+
+.empty-state {
+  display: grid;
+  gap: 12px;
+}
+
+.empty-state h2,
+.empty-state p {
+  margin: 0;
 }
 
 .share-notice {

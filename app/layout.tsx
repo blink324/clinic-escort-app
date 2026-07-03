@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { ScrollToTop } from "@/components/ScrollToTop";
 import "./styles.css";
 
 export const metadata: Metadata = {
@@ -15,7 +16,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ja">
-      <body>{children}</body>
+      <body>
+        <ScrollToTop />
+        {children}
+      </body>
     </html>
   );
 }

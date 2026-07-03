@@ -8,6 +8,11 @@ import { getAppointments, getGroup, getGroupMembers } from "@/lib/storage";
 import type { AppointmentView, GroupMember, PatientGroup } from "@/lib/types";
 
 const dateFormatter = new Intl.DateTimeFormat("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+const roleLabels = {
+  admin: "管理者",
+  member: "家族",
+  viewer: "閲覧のみ"
+} as const;
 
 export default function GroupDetailPage() {
   const params = useParams<{ id: string }>();
@@ -42,7 +47,7 @@ export default function GroupDetailPage() {
   if (!group) {
     return (
       <main className="mobile-shell with-nav">
-        <div className="empty-state"><h1>グループが見つかりません</h1></div>
+        <div className="empty-state"><h1>共有先が見つかりません</h1></div>
         <BottomNav />
       </main>
     );
@@ -50,7 +55,7 @@ export default function GroupDetailPage() {
 
   return (
     <main className="mobile-shell with-nav">
-      <Link className="back-link" href="/groups">グループへ戻る</Link>
+      <Link className="back-link" href="/groups">共有先へ戻る</Link>
       <section className="detail-hero">
         <p className="eyebrow">{group.relation}</p>
         <h1>{group.group_name}</h1>
@@ -77,7 +82,7 @@ export default function GroupDetailPage() {
           {members.map((member) => (
             <div key={member.id}>
               <strong>{member.display_name}</strong>
-              <span>{member.role}</span>
+              <span>{roleLabels[member.role]}</span>
             </div>
           ))}
         </div>
@@ -99,8 +104,8 @@ export default function GroupDetailPage() {
       </section>
 
       <section className="section-block compact">
-        <h2>グループ設定</h2>
-        <p className="muted">管理者、閲覧権限、通知先はSupabase接続後に拡張できる構造です。</p>
+        <h2>共有設定</h2>
+        <p className="muted">家族の招待やメンバー確認ができます。細かい権限設定は今後追加できます。</p>
       </section>
       <BottomNav />
     </main>

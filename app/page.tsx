@@ -58,12 +58,15 @@ export default function HomePage() {
   const [appointments, setAppointments] = useState<AppointmentView[]>([]);
   const [mode, setMode] = useState<"list" | "calendar">("list");
   const [selectedDate, setSelectedDate] = useState(localDateKey(new Date()));
+  const [loading, setLoading] = useState(true);
 
   async function refresh() {
+    setLoading(true);
     const current = await getActiveUser();
     if (current) seedDemoData(current);
     setUser(current);
     setAppointments(current ? await getAppointments() : []);
+    setLoading(false);
   }
 
   useEffect(() => {
@@ -79,6 +82,7 @@ export default function HomePage() {
   }, [appointments]);
 
   const pendingCount = appointments.filter((appointment) => !appointment.companion).length;
+  const hasAppointments = appointments.length > 0;
   const calendarDays = useMemo(() => monthDays(appointments), [appointments]);
   const selectedAppointments = appointments.filter(
     (appointment) => appointment.appointment_datetime.slice(0, 10) === selectedDate
@@ -99,25 +103,54 @@ export default function HomePage() {
       </header>
 
       <section className={pendingCount > 0 ? "attention-panel" : "attention-panel calm"}>
-        <strong>{pendingCount > 0 ? `付き添い未定が${pendingCount}件あります` : "付き添い未定はありません"}</strong>
-        <p>家族で共有して、担当者を早めに決めましょう。</p>
+        {loading ? (
+          <>
+            <strong>予定を読み込んでいます</strong>
+            <p>登録済みの通院予定を確認しています。</p>
+          </>
+        ) : !hasAppointments ? (
+          <>
+            <strong>まずは通院予定を登録しましょう</strong>
+            <p>患者名と日時を入れるだけで、家族に共有できる予定が作れます。</p>
+          </>
+        ) : pendingCount > 0 ? (
+          <>
+            <strong>付き添い未定が{pendingCount}件あります</strong>
+            <p>家族で共有して、担当者を早めに決めましょう。</p>
+          </>
+        ) : (
+          <>
+            <strong>すべての付き添いが決まっています</strong>
+            <p>予定の日時と持ち物を確認しておきましょう。</p>
+          </>
+        )}
       </section>
 
-      <div className="top-actions">
+      <div className="top-actions single">
         <Link className="primary-action" href="/appointments/new">
-          予定を登録
-        </Link>
-        <Link className="secondary-action" href="/groups/new">
-          グループ作成
+          通院予定を登録する
         </Link>
       </div>
 
-      <div className="segmented">
-        <button className={mode === "list" ? "active" : ""} onClick={() => setMode("list")}>一覧</button>
-        <button className={mode === "calendar" ? "active" : ""} onClick={() => setMode("calendar")}>カレンダー</button>
-      </div>
+      {hasAppointments && (
+        <div className="segmented">
+          <button className={mode === "list" ? "active" : ""} onClick={() => setMode("list")}>一覧</button>
+          <button className={mode === "calendar" ? "active" : ""} onClick={() => setMode("calendar")}>カレンダー</button>
+        </div>
+      )}
 
-      {mode === "list" ? (
+      {loading ? (
+        <section className="empty-state">
+          <h2>読み込み中です</h2>
+          <p>少しだけお待ちください。</p>
+        </section>
+      ) : !hasAppointments ? (
+        <section className="empty-state start-state">
+          <h2>最初の予定を入れると便利さが分かります</h2>
+          <p>母・父・祖母などの患者名を入力すると、あとから家族を招待できる共有先も自動で作られます。</p>
+          <Link className="primary-action full" href="/appointments/new">最初の通院予定を登録する</Link>
+        </section>
+      ) : mode === "list" ? (
         <section className="appointment-feed">
           {["今日", "今週", "来週以降"].map((bucket) => (
             <div className="feed-group" key={bucket}>
