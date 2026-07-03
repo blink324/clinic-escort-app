@@ -186,20 +186,20 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
 
   return (
     <article className={shared ? "detail-stack shared-detail" : "detail-stack"}>
-      <section className={appointment.companion ? "detail-hero" : "detail-hero needs-escort"}>
-        <p className="eyebrow">{appointment.group.group_name}</p>
-        <h1>{appointment.group.patient_name}さんの通院</h1>
-        {!shared && (
+      {!shared && (
+        <section className={appointment.companion ? "detail-hero" : "detail-hero needs-escort"}>
+          <p className="eyebrow">{appointment.group.group_name}</p>
+          <h1>{appointment.group.patient_name}さんの通院</h1>
           <div className="visit-place">
             <strong>{appointment.hospital_name}</strong>
             <span>{appointment.department}</span>
           </div>
-        )}
-        <p className="large-date">{dateFormatter.format(new Date(appointment.appointment_datetime))}</p>
-        <div className="summary-tags">
-          <span>{appointment.companion ? `付き添い: ${appointment.companion.display_name}さん` : "付き添い未定"}</span>
-        </div>
-      </section>
+          <p className="large-date">{dateFormatter.format(new Date(appointment.appointment_datetime))}</p>
+          <div className="summary-tags">
+            <span>{appointment.companion ? `付き添い: ${appointment.companion.display_name}さん` : "付き添い未定"}</span>
+          </div>
+        </section>
+      )}
 
       {!shared && (
         <section className="next-actions">

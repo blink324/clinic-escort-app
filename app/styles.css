@@ -922,34 +922,80 @@ textarea { line-height: 1.6; resize: vertical; }
   margin-bottom: 12px;
 }
 
-.share-visit-summary {
-  background: transparent;
-  border: 0;
-  border-bottom: 1px solid var(--line);
+.share-appointment-hero {
+  background: var(--surface);
+  border: 1px solid #c9d8ee;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
   display: grid;
-  gap: 8px;
+  gap: 16px;
   margin-bottom: 18px;
-  padding: 8px 2px 18px;
+  padding: 20px;
 }
 
-.share-visit-summary p {
-  color: var(--muted);
-  font-size: 0.9rem;
+.share-patient {
+  color: var(--text);
+  font-size: 1.48rem;
   font-weight: 900;
   margin: 0;
 }
 
-.share-visit-summary strong {
-  color: var(--text);
-  font-size: 2.2rem;
-  line-height: 1.12;
-}
-
-.share-visit-summary span {
+.share-appointment-hero time {
   color: var(--primary-dark);
-  font-size: 1.42rem;
+  font-size: 1.28rem;
   font-weight: 900;
   line-height: 1.35;
+}
+
+.share-primary-info {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 7px;
+  padding-top: 14px;
+}
+
+.share-primary-info span {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.share-primary-info strong {
+  color: var(--text);
+  font-size: 1.68rem;
+  font-weight: 900;
+  line-height: 1.18;
+}
+
+.share-companion {
+  border-radius: 8px;
+  font-size: 1.08rem;
+  font-weight: 900;
+  padding: 13px 14px;
+}
+
+.share-companion.ready {
+  background: var(--soft);
+  color: var(--primary-dark);
+}
+
+.share-companion.missing {
+  background: var(--warning);
+  border: 1px solid var(--warning-border);
+  color: #9d2246;
+}
+
+.shared-detail .focus-panel,
+.shared-detail .info-panel {
+  box-shadow: none;
+}
+
+.shared-detail .focus-panel {
+  padding: 14px;
+}
+
+.shared-detail .info-panel {
+  padding: 14px;
 }
 
 .error-text { color: var(--danger) !important; font-weight: 800; }

@@ -6,6 +6,15 @@ import { AppointmentDetail } from "@/components/AppointmentDetail";
 import { getSharedAppointment } from "@/lib/storage";
 import type { AppointmentView } from "@/lib/types";
 
+const dateFormatter = new Intl.DateTimeFormat("ja-JP", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  weekday: "long",
+  hour: "2-digit",
+  minute: "2-digit"
+});
+
 export default function SharePage() {
   const params = useParams<{ token: string }>();
   const [appointment, setAppointment] = useState<AppointmentView | null>();
@@ -32,10 +41,20 @@ export default function SharePage() {
 
   return (
     <main className="mobile-shell">
-      <section className="share-visit-summary" aria-label="通院先">
-        <p>{appointment.group.patient_name}さんの通院先</p>
-        <strong>{appointment.hospital_name}</strong>
-        <span>{appointment.department}</span>
+      <section className="share-appointment-hero" aria-label="通院予定">
+        <p className="share-patient">{appointment.group.patient_name}さんの通院</p>
+        <time>{dateFormatter.format(new Date(appointment.appointment_datetime))}</time>
+        <div className="share-primary-info">
+          <span>医療機関</span>
+          <strong>{appointment.hospital_name}</strong>
+        </div>
+        <div className="share-primary-info">
+          <span>診療科</span>
+          <strong>{appointment.department}</strong>
+        </div>
+        <div className={appointment.companion ? "share-companion ready" : "share-companion missing"}>
+          {appointment.companion ? `付き添い: ${appointment.companion.display_name}さん` : "付き添い: 未定"}
+        </div>
       </section>
       <AppointmentDetail appointment={appointment} shared />
     </main>
