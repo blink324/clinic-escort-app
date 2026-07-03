@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CompanionForm } from "@/components/CompanionForm";
 import { LineNotificationButton } from "@/components/LineNotificationButton";
 import { calendarFileName, createIcsFile, googleCalendarUrl } from "@/lib/calendar";
+import { notifyCompanionAssigned } from "@/lib/line-notify-client";
 import {
   deleteAppointment,
   deleteCompanion,
@@ -97,6 +98,7 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
     setAppointment((current) => ({ ...current, companion }));
     setEditingCompanion(false);
     setSelectingCompanion(false);
+    void notifyCompanionAssigned(appointment.id);
   }
 
   async function removeCompanion() {
