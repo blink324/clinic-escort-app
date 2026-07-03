@@ -91,6 +91,26 @@ button { cursor: pointer; }
 .small { min-height: 46px; padding: 10px 14px; }
 .full { width: 100%; }
 
+.line-notify-button {
+  align-items: center;
+  background: #06c755;
+  border: 0;
+  border-radius: 8px;
+  color: white;
+  display: inline-flex;
+  font-weight: 900;
+  justify-content: center;
+  min-height: 54px;
+  padding: 13px 16px;
+  text-align: center;
+}
+
+.line-notify-button:disabled {
+  background: #d8e0ec;
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
 .text-button {
   background: transparent;
   border: 0;
@@ -231,6 +251,24 @@ button { cursor: pointer; }
   gap: 10px;
   grid-template-columns: 1fr;
   margin-bottom: 14px;
+}
+
+.line-notify-panel {
+  align-items: center;
+  background: #effaf3;
+  border: 1px solid #bce7c9;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 16px;
+}
+
+.line-notify-panel p {
+  color: var(--muted);
+  line-height: 1.55;
+  margin: 6px 0 0;
 }
 
 .filter-row {
@@ -860,6 +898,11 @@ textarea { line-height: 1.6; resize: vertical; }
 
 .error-text { color: var(--danger) !important; font-weight: 800; }
 .notice-text { color: var(--primary-dark) !important; font-weight: 800; }
+
+.line-connect-card {
+  display: grid;
+  gap: 14px;
+}
 
 .modal-backdrop {
   align-items: flex-end;

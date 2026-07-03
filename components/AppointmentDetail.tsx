@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { CompanionForm } from "@/components/CompanionForm";
+import { LineNotificationButton } from "@/components/LineNotificationButton";
 import { calendarFileName, createIcsFile, googleCalendarUrl } from "@/lib/calendar";
 import {
   deleteAppointment,
@@ -206,6 +207,7 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
           <button className="secondary-action" onClick={downloadCalendarFile} type="button">
             カレンダー追加
           </button>
+          <LineNotificationButton />
         </section>
       )}
 

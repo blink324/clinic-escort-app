@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AuthPanel } from "@/components/AuthPanel";
 import { BottomNav } from "@/components/BottomNav";
+import { LineNotificationButton } from "@/components/LineNotificationButton";
 import { getActiveUser, signOut } from "@/lib/auth";
 import { enabledReminderText } from "@/lib/reminders";
 import { getAppointments, seedDemoData } from "@/lib/storage";
@@ -152,6 +153,14 @@ export default function HomePage() {
           通院予定を登録する
         </Link>
       </div>
+
+      <section className="line-notify-panel">
+        <div>
+          <strong>LINEでリマインドを受け取る</strong>
+          <p>付き添い担当になった時や、前日・当日朝の通知に使います。</p>
+        </div>
+        <LineNotificationButton full />
+      </section>
 
       {hasAppointments && (
         <>
