@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
-import { getAppointments, getGroup, getGroupMembers } from "@/lib/storage";
+import { updateDisplayName } from "@/lib/auth";
+import { getAppointments, getCurrentUser, getGroup, getGroupMembers, updateGroup } from "@/lib/storage";
 import type { AppointmentView, GroupMember, PatientGroup } from "@/lib/types";
 
 const dateFormatter = new Intl.DateTimeFormat("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -20,11 +21,24 @@ export default function GroupDetailPage() {
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [appointments, setAppointments] = useState<AppointmentView[]>([]);
   const [copied, setCopied] = useState(false);
+  const [savingName, setSavingName] = useState(false);
+  const [savingGroup, setSavingGroup] = useState(false);
+  const [nameMessage, setNameMessage] = useState("");
+  const [groupMessage, setGroupMessage] = useState("");
+  const [myName, setMyName] = useState("");
+  const [groupForm, setGroupForm] = useState({ patient_name: "", group_name: "", memo: "" });
 
   useEffect(() => {
     if (!params.id) return;
     async function loadGroup() {
-      setGroup((await getGroup(params.id)) || null);
+      const nextGroup = (await getGroup(params.id)) || null;
+      setGroup(nextGroup);
+      setGroupForm({
+        patient_name: nextGroup?.patient_name || "",
+        group_name: nextGroup?.group_name || "",
+        memo: nextGroup?.memo || ""
+      });
+      setMyName(getCurrentUser()?.display_name || "");
       setMembers(await getGroupMembers(params.id));
       setAppointments((await getAppointments()).filter((appointment) => appointment.group_id === params.id));
     }
@@ -41,6 +55,47 @@ export default function GroupDetailPage() {
     await navigator.clipboard.writeText(inviteUrl);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1600);
+  }
+
+  async function saveMyName(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSavingName(true);
+    setNameMessage("");
+    try {
+      const user = await updateDisplayName(myName);
+      setMyName(user.display_name);
+      setMembers((current) =>
+        current.map((member) => (member.user_id === user.id ? { ...member, display_name: user.display_name } : member))
+      );
+      setNameMessage("名前を更新しました");
+    } catch (caught) {
+      setNameMessage(caught instanceof Error ? caught.message : "名前を更新できませんでした");
+    } finally {
+      setSavingName(false);
+    }
+  }
+
+  async function saveGroup(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!group) return;
+    setSavingGroup(true);
+    setGroupMessage("");
+    try {
+      const nextGroup = await updateGroup(group.id, groupForm);
+      if (nextGroup) {
+        setGroup(nextGroup);
+        setGroupForm({
+          patient_name: nextGroup.patient_name,
+          group_name: nextGroup.group_name,
+          memo: nextGroup.memo
+        });
+      }
+      setGroupMessage("共有先を更新しました");
+    } catch (caught) {
+      setGroupMessage(caught instanceof Error ? caught.message : "共有先を更新できませんでした");
+    } finally {
+      setSavingGroup(false);
+    }
   }
 
   if (group === undefined) return <main className="mobile-shell">読み込み中です</main>;
@@ -89,6 +144,20 @@ export default function GroupDetailPage() {
       </section>
 
       <section className="section-block compact">
+        <h2>自分の名前</h2>
+        <form className="inline-form compact-form" onSubmit={(event) => void saveMyName(event)}>
+          <label>
+            メンバーに表示する名前
+            <input required value={myName} onChange={(event) => setMyName(event.target.value)} />
+          </label>
+          {nameMessage && <p className="notice-text">{nameMessage}</p>}
+          <button className="secondary-action full" disabled={savingName} type="submit">
+            {savingName ? "更新中..." : "名前を更新"}
+          </button>
+        </form>
+      </section>
+
+      <section className="section-block compact">
         <div className="section-heading">
           <h2>この患者の予定</h2>
           <Link href={`/appointments/new?group=${group.id}`}>予定を追加</Link>
@@ -105,7 +174,36 @@ export default function GroupDetailPage() {
 
       <section className="section-block compact">
         <h2>共有設定</h2>
-        <p className="muted">家族の招待やメンバー確認ができます。細かい権限設定は今後追加できます。</p>
+        <form className="inline-form compact-form" onSubmit={(event) => void saveGroup(event)}>
+          <label>
+            患者名
+            <input
+              required
+              value={groupForm.patient_name}
+              onChange={(event) => setGroupForm((current) => ({ ...current, patient_name: event.target.value }))}
+            />
+          </label>
+          <label>
+            共有先の名前
+            <input
+              required
+              value={groupForm.group_name}
+              onChange={(event) => setGroupForm((current) => ({ ...current, group_name: event.target.value }))}
+            />
+          </label>
+          <label>
+            メモ
+            <textarea
+              rows={3}
+              value={groupForm.memo}
+              onChange={(event) => setGroupForm((current) => ({ ...current, memo: event.target.value }))}
+            />
+          </label>
+          {groupMessage && <p className="notice-text">{groupMessage}</p>}
+          <button className="secondary-action full" disabled={savingGroup} type="submit">
+            {savingGroup ? "更新中..." : "共有先を更新"}
+          </button>
+        </form>
       </section>
       <BottomNav />
     </main>

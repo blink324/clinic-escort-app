@@ -126,6 +126,31 @@ export function signOutLocal() {
   window.localStorage.removeItem(USER_KEY);
 }
 
+export async function updateCurrentUserName(displayName: string) {
+  const user = getCurrentUser();
+  const nextName = displayName.trim();
+  if (!user) throw new Error("ログインが必要です");
+  if (!nextName) throw new Error("名前を入力してください");
+
+  const nextUser = { ...user, display_name: nextName };
+  setCurrentUser(nextUser);
+
+  if (!supabase) {
+    const members = readJson<GroupMember[]>(MEMBERS_KEY, []).map((member) =>
+      member.user_id === user.id ? { ...member, display_name: nextName, contact: user.email } : member
+    );
+    writeJson(MEMBERS_KEY, members);
+    return nextUser;
+  }
+
+  const { error } = await supabase
+    .from("group_members")
+    .update({ display_name: nextName, contact: user.email })
+    .eq("user_id", user.id);
+  throwIfError(error);
+  return nextUser;
+}
+
 async function localGroups() {
   const user = getCurrentUser();
   if (!user) return [];
@@ -207,7 +232,7 @@ export async function createGroup(input: GroupInput) {
       owner_user_id: user.id,
       patient_name: input.patient_name,
       relation: input.relation,
-      group_name: input.group_name || `${input.patient_name}の通院グループ`,
+      group_name: input.group_name || `${input.patient_name}の共有先`,
       memo: input.memo,
       invite_token: createToken()
     })
@@ -227,6 +252,45 @@ export async function createGroup(input: GroupInput) {
   return group as PatientGroup;
 }
 
+export async function updateGroup(
+  id: string,
+  input: Pick<GroupInput, "patient_name" | "group_name" | "memo">
+) {
+  const patientName = input.patient_name.trim();
+  const groupName = input.group_name.trim();
+  if (!patientName) throw new Error("患者名を入力してください");
+  if (!groupName) throw new Error("共有先の名前を入力してください");
+
+  if (!supabase) {
+    const updated = readJson<PatientGroup[]>(GROUPS_KEY, []).map((group) =>
+      group.id === id
+        ? {
+            ...group,
+            patient_name: patientName,
+            group_name: groupName,
+            memo: input.memo,
+            updated_at: now()
+          }
+        : group
+    );
+    writeJson(GROUPS_KEY, updated);
+    return updated.find((group) => group.id === id);
+  }
+
+  const { data, error } = await supabase
+    .from("patient_groups")
+    .update({
+      patient_name: patientName,
+      group_name: groupName,
+      memo: input.memo
+    })
+    .eq("id", id)
+    .select("*")
+    .single();
+  throwIfError(error);
+  return data as PatientGroup;
+}
+
 function createLocalGroup(input: GroupInput, user: AuthUser) {
   const timestamp = now();
   const group: PatientGroup = {
@@ -234,7 +298,7 @@ function createLocalGroup(input: GroupInput, user: AuthUser) {
     owner_user_id: user.id,
     patient_name: input.patient_name,
     relation: input.relation,
-    group_name: input.group_name || `${input.patient_name}の通院グループ`,
+    group_name: input.group_name || `${input.patient_name}の共有先`,
     memo: input.memo,
     invite_token: createToken(),
     created_at: timestamp,
@@ -599,19 +663,19 @@ export function seedDemoData(user = getCurrentUser()) {
   const mother = createLocalGroup({
     patient_name: "母",
     relation: "母",
-    group_name: "母の通院グループ",
+    group_name: "母の共有先",
     memo: "血圧と薬の変更を家族で確認"
   }, user);
   const father = createLocalGroup({
     patient_name: "父",
     relation: "父",
-    group_name: "父の通院グループ",
+    group_name: "父の共有先",
     memo: "眼科の予定は付き添い必須"
   }, user);
   const grandmother = createLocalGroup({
     patient_name: "祖母",
     relation: "祖母",
-    group_name: "祖母の通院グループ",
+    group_name: "祖母の共有先",
     memo: "歯科は午後が楽"
   }, user);
 

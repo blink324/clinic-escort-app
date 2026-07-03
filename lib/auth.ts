@@ -1,7 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase";
-import { getCurrentUser, setCurrentUser, signInDemo, signOutLocal } from "@/lib/storage";
+import { getCurrentUser, setCurrentUser, signInDemo, signOutLocal, updateCurrentUserName } from "@/lib/storage";
 import type { AuthUser } from "@/lib/types";
 
 function userFromSupabase(user: { id: string; email?: string; user_metadata?: Record<string, unknown> }, fallbackName = "") {
@@ -102,6 +102,20 @@ export async function getActiveUser() {
 export async function signOut() {
   if (supabase) await supabase.auth.signOut();
   signOutLocal();
+}
+
+export async function updateDisplayName(displayName: string) {
+  const normalized = displayName.trim();
+  if (!normalized) throw new Error("名前を入力してください。");
+
+  if (supabase) {
+    const { error } = await supabase.auth.updateUser({
+      data: { display_name: normalized }
+    });
+    if (error) throw new Error(friendlyAuthError(error.message));
+  }
+
+  return updateCurrentUserName(normalized);
 }
 
 export function currentLocalUser() {
