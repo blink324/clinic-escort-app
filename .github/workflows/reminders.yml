@@ -1,0 +1,23 @@
+name: Send LINE reminders
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+jobs:
+  call-reminder-api:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call reminder endpoint
+        env:
+          CRON_SECRET: ${{ secrets.TSUKISOI_CRON_SECRET }}
+          CRON_URL: https://www.clinic-tsukisoi.jp/api/cron/reminders
+        run: |
+          if [ -n "$CRON_SECRET" ]; then
+            curl --fail --silent --show-error \
+              --header "Authorization: Bearer $CRON_SECRET" \
+              "$CRON_URL"
+          else
+            curl --fail --silent --show-error "$CRON_URL"
+          fi
