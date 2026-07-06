@@ -78,6 +78,7 @@ export default function HomePage() {
   const [selectedDate, setSelectedDate] = useState(localDateKey(new Date()));
   const [loading, setLoading] = useState(true);
   const [showPendingOnly, setShowPendingOnly] = useState(false);
+  const [showPastHistory, setShowPastHistory] = useState(false);
 
   async function refresh() {
     setLoading(true);
@@ -92,21 +93,48 @@ export default function HomePage() {
     void refresh();
   }, []);
 
+  useEffect(() => {
+    if (!showPastHistory) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [showPastHistory]);
+
+  const nowTime = Date.now();
+  const futureAppointments = useMemo(
+    () => appointments.filter((appointment) => new Date(appointment.appointment_datetime).getTime() >= nowTime),
+    [appointments, nowTime]
+  );
+  const pastAppointments = useMemo(
+    () =>
+      appointments
+        .filter((appointment) => new Date(appointment.appointment_datetime).getTime() < nowTime)
+        .sort((a, b) => new Date(b.appointment_datetime).getTime() - new Date(a.appointment_datetime).getTime()),
+    [appointments, nowTime]
+  );
+
   const grouped = useMemo(() => {
-    const visibleAppointments = showPendingOnly ? appointments.filter((appointment) => !appointment.companion) : appointments;
+    const visibleAppointments = showPendingOnly
+      ? futureAppointments.filter((appointment) => !appointment.companion)
+      : futureAppointments;
     return visibleAppointments.reduce<Record<string, AppointmentView[]>>((acc, appointment) => {
       const bucket = bucketFor(appointment.appointment_datetime);
       acc[bucket] = [...(acc[bucket] || []), appointment];
       return acc;
     }, {});
-  }, [appointments, showPendingOnly]);
+  }, [futureAppointments, showPendingOnly]);
 
-  const pendingCount = appointments.filter((appointment) => !appointment.companion).length;
-  const hasAppointments = appointments.length > 0;
-  const visibleCount = showPendingOnly ? pendingCount : appointments.length;
-  const calendarAppointments = showPendingOnly ? appointments.filter((appointment) => !appointment.companion) : appointments;
+  const pendingCount = futureAppointments.filter((appointment) => !appointment.companion).length;
+  const hasFutureAppointments = futureAppointments.length > 0;
+  const hasAnyAppointments = appointments.length > 0;
+  const visibleCount = showPendingOnly ? pendingCount : futureAppointments.length;
+  const calendarAppointments = showPendingOnly
+    ? futureAppointments.filter((appointment) => !appointment.companion)
+    : futureAppointments;
   const calendarDays = useMemo(() => monthDays(calendarAppointments), [calendarAppointments]);
-  const selectedAppointments = appointments.filter(
+  const selectedAppointments = futureAppointments.filter(
     (appointment) => appointment.appointment_datetime.slice(0, 10) === selectedDate
   );
 
@@ -130,7 +158,7 @@ export default function HomePage() {
             <strong>予定を読み込んでいます</strong>
             <p>登録済みの通院予定を確認しています。</p>
           </>
-        ) : !hasAppointments ? (
+        ) : !hasFutureAppointments ? (
           <>
             <strong>まずは通院予定を登録しましょう</strong>
             <p>患者名と日時を入れるだけで、家族に共有できる予定が作れます。</p>
@@ -154,15 +182,7 @@ export default function HomePage() {
         </Link>
       </div>
 
-      <section className="line-notify-panel">
-        <div>
-          <strong>LINEでリマインドを受け取る</strong>
-          <p>付き添い担当になった時や、前日・当日朝の通知に使います。</p>
-        </div>
-        <LineNotificationButton full />
-      </section>
-
-      {hasAppointments && (
+      {hasAnyAppointments && (
         <>
           <div className="filter-row">
             <button
@@ -172,12 +192,17 @@ export default function HomePage() {
             >
               付き添い未定だけ
             </button>
+            <button className="filter-chip history" onClick={() => setShowPastHistory(true)} type="button">
+              過去の通院履歴
+            </button>
             <span>{visibleCount}件表示</span>
           </div>
-          <div className="segmented">
-            <button className={mode === "list" ? "active" : ""} onClick={() => setMode("list")}>一覧</button>
-            <button className={mode === "calendar" ? "active" : ""} onClick={() => setMode("calendar")}>カレンダー</button>
-          </div>
+          {hasFutureAppointments && (
+            <div className="segmented">
+              <button className={mode === "list" ? "active" : ""} onClick={() => setMode("list")}>一覧</button>
+              <button className={mode === "calendar" ? "active" : ""} onClick={() => setMode("calendar")}>カレンダー</button>
+            </div>
+          )}
         </>
       )}
 
@@ -186,11 +211,17 @@ export default function HomePage() {
           <h2>読み込み中です</h2>
           <p>少しだけお待ちください。</p>
         </section>
-      ) : !hasAppointments ? (
+      ) : !hasFutureAppointments ? (
         <section className="empty-state start-state">
-          <h2>最初の予定を入れると便利さが分かります</h2>
-          <p>母・父・祖母などの患者名を入力すると、あとから家族を招待できる共有先も自動で作られます。</p>
-          <Link className="primary-action full" href="/appointments/new">最初の通院予定を登録する</Link>
+          <h2>{hasAnyAppointments ? "今後の通院予定はありません" : "最初の予定を入れると便利さが分かります"}</h2>
+          <p>
+            {hasAnyAppointments
+              ? "過去の通院は履歴から確認できます。次の予定が決まったら登録しましょう。"
+              : "母・父・祖母などの患者名を入力すると、あとから家族を招待できる共有先も自動で作られます。"}
+          </p>
+          <Link className="primary-action full" href="/appointments/new">
+            {hasAnyAppointments ? "次の通院予定を登録する" : "最初の通院予定を登録する"}
+          </Link>
         </section>
       ) : mode === "list" ? (
         <section className="appointment-feed">
@@ -289,6 +320,51 @@ export default function HomePage() {
             ))}
           </div>
         </section>
+      )}
+
+      <section className="line-notify-panel lower">
+        <div>
+          <strong>LINEでリマインドを受け取る</strong>
+          <p>付き添い担当になった時や、前日・当日朝の通知に使います。</p>
+        </div>
+        <LineNotificationButton full />
+      </section>
+
+      {showPastHistory && (
+        <div className="modal-backdrop top-modal" role="dialog" aria-modal="true" aria-labelledby="past-history-title">
+          <section className="modal-panel past-history-panel">
+            <div className="modal-header">
+              <h2 id="past-history-title">過去の通院履歴</h2>
+              <button className="text-button" onClick={() => setShowPastHistory(false)} type="button">
+                閉じる
+              </button>
+            </div>
+            <div className="past-history-list">
+              {pastAppointments.length === 0 && <p className="muted">過去の通院履歴はまだありません</p>}
+              {pastAppointments.map((appointment) => (
+                <Link
+                  className="schedule-card past"
+                  href={`/appointments/${appointment.id}`}
+                  key={appointment.id}
+                  onClick={() => setShowPastHistory(false)}
+                >
+                  <div className="date-tile">
+                    <span>{dateFormatter.format(new Date(appointment.appointment_datetime))}</span>
+                    <strong>{timeFormatter.format(new Date(appointment.appointment_datetime))}</strong>
+                  </div>
+                  <div className="schedule-main">
+                    <strong>{appointment.group.patient_name}</strong>
+                    <p>{appointment.hospital_name} / {appointment.department}</p>
+                    <div className="schedule-meta">
+                      <span>{appointment.companion ? `付き添い: ${appointment.companion.display_name}` : "付き添い: 未定"}</span>
+                      <span>{appointment.status === "completed" ? "受診完了" : appointment.status === "missed" ? "未受診" : "未確認"}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        </div>
       )}
 
       <BottomNav />
