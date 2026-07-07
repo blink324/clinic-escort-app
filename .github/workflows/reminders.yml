@@ -14,10 +14,28 @@ jobs:
           CRON_SECRET: ${{ secrets.TSUKISOI_CRON_SECRET }}
           CRON_URL: https://www.clinic-tsukisoi.jp/api/cron/reminders
         run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::warning::TSUKISOI_CRON_SECRET is not set. Calling without Authorization header."
+          fi
+
           if [ -n "$CRON_SECRET" ]; then
-            curl --fail --silent --show-error \
+            http_code=$(curl --silent --show-error \
+              --output reminder-response.json \
+              --write-out "%{http_code}" \
               --header "Authorization: Bearer $CRON_SECRET" \
-              "$CRON_URL"
+              "$CRON_URL")
           else
-            curl --fail --silent --show-error "$CRON_URL"
+            http_code=$(curl --silent --show-error \
+              --output reminder-response.json \
+              --write-out "%{http_code}" \
+              "$CRON_URL")
+          fi
+
+          echo "HTTP status: $http_code"
+          echo "Response:"
+          cat reminder-response.json
+          echo
+
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            exit 1
           fi
