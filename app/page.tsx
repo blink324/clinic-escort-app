@@ -220,6 +220,25 @@ export default function HomePage() {
           <Link className="primary-action full" href="/appointments/new">
             {hasAnyAppointments ? "次の通院予定を登録する" : "最初の通院予定を登録する"}
           </Link>
+          {!hasAnyAppointments && (
+            <div className="onboarding-steps" aria-label="最初の使い方">
+              <div>
+                <span>1</span>
+                <strong>予定を登録</strong>
+                <p>病院名・診療科・日時を入れます。</p>
+              </div>
+              <div>
+                <span>2</span>
+                <strong>LINEで共有</strong>
+                <p>家族に予定ページを送れます。</p>
+              </div>
+              <div>
+                <span>3</span>
+                <strong>付き添い決定</strong>
+                <p>誰が行くかをその場で決めます。</p>
+              </div>
+            </div>
+          )}
         </section>
       ) : mode === "list" ? (
         <section className="appointment-feed">
