@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
+import { friendlyErrorMessage } from "@/lib/errors";
 import { createGroup, getAppointments, getGroups, saveAppointment } from "@/lib/storage";
 import type { AppointmentInput, AppointmentView, PatientGroup, ReminderType } from "@/lib/types";
 
@@ -19,6 +20,7 @@ export default function NewAppointmentPage() {
   const [history, setHistory] = useState<AppointmentView[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState("");
   const [groupMode, setGroupMode] = useState<"existing" | "new">("new");
   const [patientName, setPatientName] = useState("");
   const [relation, setRelation] = useState("");
@@ -82,6 +84,7 @@ export default function NewAppointmentPage() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
+    setSaveMessage("");
     try {
       let groupId = form.group_id;
       if (groupMode === "new" || !groupId) {
@@ -96,6 +99,8 @@ export default function NewAppointmentPage() {
       }
       const appointment = await saveAppointment({ ...form, group_id: groupId });
       router.push(`/appointments/${appointment.id}`);
+    } catch (caught) {
+      setSaveMessage(friendlyErrorMessage(caught, "通院予定を登録できませんでした。入力内容と通信状況を確認してください。"));
     } finally {
       setSaving(false);
     }
@@ -232,6 +237,7 @@ export default function NewAppointmentPage() {
         </label>
         {form.reservation_image_url && <img className="reservation-preview" src={form.reservation_image_url} alt="予約票プレビュー" />}
 
+        {saveMessage && <p className="error-text">{saveMessage}</p>}
         <button className="primary-action full" disabled={saving} type="submit">
           {saving ? "登録中..." : "登録する"}
         </button>

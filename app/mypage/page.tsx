@@ -91,13 +91,27 @@ export default function MyPage() {
 
   async function handleDeleteData() {
     const ok = window.confirm(
-      "アプリ内の共有先、通院予定、付き添い担当、LINE連携情報を削除します。元に戻せません。実行しますか？"
+      "退会して、ログインアカウントとアプリ内データを削除します。元に戻せません。実行しますか？"
     );
     if (!ok) return;
     setDeleting(true);
     setDeleteMessage("");
     try {
-      await deleteMyAppData();
+      if (supabase) {
+        const { data } = await supabase.auth.getSession();
+        const token = data.session?.access_token;
+        if (!token) throw new Error("ログイン状態を確認できませんでした。もう一度ログインしてください。");
+        const response = await fetch("/api/account/delete", {
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          method: "POST"
+        });
+        const result = (await response.json().catch(() => ({}))) as { error?: string };
+        if (!response.ok) throw new Error(result.error || "退会処理を完了できませんでした。");
+      } else {
+        await deleteMyAppData();
+      }
       await signOut();
       window.location.href = "/";
     } catch (caught) {
@@ -322,13 +336,13 @@ export default function MyPage() {
       </section>
 
       <section className="profile-panel danger-zone">
-        <h2>データ削除</h2>
+        <h2>退会・データ削除</h2>
         <p>
-          共有先、通院予定、付き添い担当、LINE連携情報を削除します。ログイン用アカウント自体の完全削除が必要な場合は、お問い合わせから連絡してください。
+          ログインアカウント、共有先、通院予定、付き添い担当、LINE連携情報を削除します。実行後は元に戻せません。
         </p>
         {deleteMessage && <p className="error-text">{deleteMessage}</p>}
         <button className="danger-action full" disabled={deleting} onClick={() => void handleDeleteData()} type="button">
-          {deleting ? "削除中..." : "アプリ内データを削除する"}
+          {deleting ? "削除中..." : "退会してデータを削除する"}
         </button>
       </section>
 

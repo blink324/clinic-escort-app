@@ -307,6 +307,27 @@ export async function updateGroup(
   return data as PatientGroup;
 }
 
+export async function regenerateGroupInviteToken(id: string) {
+  const inviteToken = createToken();
+
+  if (!supabase) {
+    const updated = readJson<PatientGroup[]>(GROUPS_KEY, []).map((group) =>
+      group.id === id ? { ...group, invite_token: inviteToken, updated_at: now() } : group
+    );
+    writeJson(GROUPS_KEY, updated);
+    return updated.find((group) => group.id === id);
+  }
+
+  const { data, error } = await supabase
+    .from("patient_groups")
+    .update({ invite_token: inviteToken, updated_at: now() })
+    .eq("id", id)
+    .select("*")
+    .single();
+  throwIfError(error);
+  return data as PatientGroup;
+}
+
 function createLocalGroup(input: GroupInput, user: AuthUser) {
   const timestamp = now();
   const group: PatientGroup = {

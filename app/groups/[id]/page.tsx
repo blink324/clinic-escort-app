@@ -5,7 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { getActiveUser, updateDisplayName } from "@/lib/auth";
-import { getAppointments, getGroup, getGroupMembers, leaveGroup, updateGroup } from "@/lib/storage";
+import { friendlyErrorMessage } from "@/lib/errors";
+import { getAppointments, getGroup, getGroupMembers, leaveGroup, regenerateGroupInviteToken, updateGroup } from "@/lib/storage";
 import type { AppointmentView, GroupMember, PatientGroup } from "@/lib/types";
 
 const dateFormatter = new Intl.DateTimeFormat("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -25,8 +26,11 @@ export default function GroupDetailPage() {
   const [savingName, setSavingName] = useState(false);
   const [savingGroup, setSavingGroup] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [regeneratingInvite, setRegeneratingInvite] = useState(false);
   const [nameMessage, setNameMessage] = useState("");
   const [groupMessage, setGroupMessage] = useState("");
+  const [leaveMessage, setLeaveMessage] = useState("");
+  const [inviteMessage, setInviteMessage] = useState("");
   const [myName, setMyName] = useState("");
   const [currentUserId, setCurrentUserId] = useState("");
   const [editingName, setEditingName] = useState(false);
@@ -64,6 +68,24 @@ export default function GroupDetailPage() {
     window.setTimeout(() => setCopied(false), 1600);
   }
 
+  async function regenerateInvite() {
+    if (!group) return;
+    const ok = window.confirm("招待リンクを作り直します。古い招待URLは使えなくなります。実行しますか？");
+    if (!ok) return;
+    setRegeneratingInvite(true);
+    setInviteMessage("");
+    try {
+      const nextGroup = await regenerateGroupInviteToken(group.id);
+      if (nextGroup) setGroup(nextGroup);
+      setCopied(false);
+      setInviteMessage("招待リンクを作り直しました。新しいURLを共有してください。");
+    } catch (caught) {
+      setInviteMessage(friendlyErrorMessage(caught, "招待リンクを作り直せませんでした。時間を置いてもう一度お試しください。"));
+    } finally {
+      setRegeneratingInvite(false);
+    }
+  }
+
   async function saveMyName(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSavingName(true);
@@ -84,7 +106,7 @@ export default function GroupDetailPage() {
       setNameMessage("名前を更新しました");
       setEditingName(false);
     } catch (caught) {
-      setNameMessage(caught instanceof Error ? caught.message : "名前を更新できませんでした");
+      setNameMessage(friendlyErrorMessage(caught, "名前を更新できませんでした。時間を置いてもう一度お試しください。"));
     } finally {
       setSavingName(false);
     }
@@ -108,7 +130,7 @@ export default function GroupDetailPage() {
       setGroupMessage("共有先を更新しました");
       setEditingGroup(false);
     } catch (caught) {
-      setGroupMessage(caught instanceof Error ? caught.message : "共有先を更新できませんでした");
+      setGroupMessage(friendlyErrorMessage(caught, "共有先を更新できませんでした。入力内容を確認してください。"));
     } finally {
       setSavingGroup(false);
     }
@@ -119,9 +141,12 @@ export default function GroupDetailPage() {
     const ok = window.confirm(`${group.group_name}から抜けます。よろしいですか？`);
     if (!ok) return;
     setLeaving(true);
+    setLeaveMessage("");
     try {
       await leaveGroup(group.id);
       router.push("/groups");
+    } catch (caught) {
+      setLeaveMessage(friendlyErrorMessage(caught, "共有先から抜けられませんでした。時間を置いてもう一度お試しください。"));
     } finally {
       setLeaving(false);
     }
@@ -157,7 +182,13 @@ export default function GroupDetailPage() {
         <div className="action-grid">
           <a className="line-action" href={lineUrl} target="_blank" rel="noreferrer">LINEで招待</a>
           <button className="secondary-action" onClick={copyInvite}>{copied ? "コピーしました" : "招待URLをコピー"}</button>
+          <button className="secondary-action" disabled={regeneratingInvite} onClick={() => void regenerateInvite()} type="button">
+            {regeneratingInvite ? "再発行中..." : "招待リンクを再発行"}
+          </button>
         </div>
+        {inviteMessage && (
+          <p className={inviteMessage.includes("作り直しました") ? "notice-text" : "error-text"}>{inviteMessage}</p>
+        )}
       </section>
 
       <section className="section-block compact">
@@ -205,6 +236,7 @@ export default function GroupDetailPage() {
       <section className="section-block compact">
         <h2>この共有先から抜ける</h2>
         <p className="muted">抜けると、この共有先の予定は自分の画面に表示されなくなります。</p>
+        {leaveMessage && <p className="error-text">{leaveMessage}</p>}
         <button className="danger-action full compact-form" disabled={leaving} onClick={() => void leaveCurrentGroup()} type="button">
           {leaving ? "処理中..." : "共有先から抜ける"}
         </button>

@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AuthPanel } from "@/components/AuthPanel";
 import { getActiveUser } from "@/lib/auth";
+import { friendlyErrorMessage } from "@/lib/errors";
 import { getGroupByInviteToken, joinGroup } from "@/lib/storage";
 import type { AuthUser, PatientGroup } from "@/lib/types";
 
@@ -13,6 +14,7 @@ export default function InvitePage() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [group, setGroup] = useState<PatientGroup | null>();
   const [joined, setJoined] = useState(false);
+  const [joinMessage, setJoinMessage] = useState("");
 
   async function refresh() {
     setUser(await getActiveUser());
@@ -24,10 +26,15 @@ export default function InvitePage() {
   }, [params.token]);
 
   async function join() {
-    const next = await joinGroup(params.token);
-    if (next) {
-      setGroup(next);
-      setJoined(true);
+    setJoinMessage("");
+    try {
+      const next = await joinGroup(params.token);
+      if (next) {
+        setGroup(next);
+        setJoined(true);
+      }
+    } catch (caught) {
+      setJoinMessage(friendlyErrorMessage(caught, "共有先に参加できませんでした。ログイン状態と招待URLを確認してください。"));
     }
   }
 
@@ -47,6 +54,7 @@ export default function InvitePage() {
             ) : (
               <button className="primary-action full" onClick={() => void join()}>この共有先に参加する</button>
             )}
+            {joinMessage && <p className="error-text">{joinMessage}</p>}
           </>
         ) : (
           <>

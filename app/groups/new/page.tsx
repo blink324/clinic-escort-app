@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
+import { friendlyErrorMessage } from "@/lib/errors";
 import { createGroup } from "@/lib/storage";
 
 export default function NewGroupPage() {
@@ -14,11 +15,13 @@ export default function NewGroupPage() {
   const [groupName, setGroupName] = useState("");
   const [memo, setMemo] = useState("");
   const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState("");
   const selectedRelation = relation === "その他" ? customRelation : relation;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
+    setSaveMessage("");
     try {
       const group = await createGroup({
         patient_name: patientName,
@@ -27,6 +30,8 @@ export default function NewGroupPage() {
         memo
       });
       router.push(`/groups/${group.id}`);
+    } catch (caught) {
+      setSaveMessage(friendlyErrorMessage(caught, "共有先を作成できませんでした。入力内容と通信状況を確認してください。"));
     } finally {
       setSaving(false);
     }
@@ -85,6 +90,7 @@ export default function NewGroupPage() {
           メモ
           <textarea rows={4} value={memo} onChange={(event) => setMemo(event.target.value)} />
         </label>
+        {saveMessage && <p className="error-text">{saveMessage}</p>}
         <button className="primary-action full" disabled={saving} type="submit">
           {saving ? "作成中..." : "作成する"}
         </button>
