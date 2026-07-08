@@ -70,7 +70,7 @@ function adminClient() {
 }
 
 function isAuthorized(request: Request) {
-  const cronSecret = process.env.CRON_SECRET?.trim();
+  const cronSecret = (process.env.CRON_SECRET || process.env.TSUKISOI_CRON_SECRET)?.trim();
   if (!cronSecret) return true;
   const authorization = request.headers.get("authorization")?.trim();
   const cronSecretHeader = request.headers.get("x-cron-secret")?.trim();
@@ -237,7 +237,13 @@ export async function GET(request: Request) {
         if (insertError) throw new Error(insertError.message);
         sentLogKeys.add(`${reminder.id}:${userId}`);
         sent += 1;
-      } catch {
+      } catch (caught) {
+        console.error("LINE reminder failed", {
+          appointmentId: appointment.id,
+          reminderSettingId: reminder.id,
+          recipientUserId: userId,
+          error: caught instanceof Error ? caught.message : String(caught)
+        });
         failed += 1;
       }
     }

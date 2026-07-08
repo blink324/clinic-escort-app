@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Call reminder endpoint
         env:
-          CRON_SECRET: ${{ secrets.TSUKISOI_CRON_SECRET }}
+          CRON_SECRET: ${{ secrets.TSUKISOI_CRON_SECRET || secrets.CRON_SECRET }}
           CRON_URL: https://www.clinic-tsukisoi.jp/api/cron/reminders
         run: |
           if [ -z "$CRON_SECRET" ]; then

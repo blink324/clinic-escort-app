@@ -68,6 +68,11 @@ async function pushLineMessage(lineUserId: string, text: string) {
 
 type NotificationAction = "assigned" | "removed";
 
+const notificationType: Record<NotificationAction, "companion_assigned" | "companion_removed"> = {
+  assigned: "companion_assigned",
+  removed: "companion_removed"
+};
+
 export async function POST(request: Request) {
   const supabase = adminClient();
   if (!supabase) {
@@ -143,8 +148,9 @@ export async function POST(request: Request) {
   const shareUrl = `${appUrl}/share/${appointment.share_token}`;
   const dateText = dateFormatter.format(new Date(appointment.appointment_datetime));
 
+  const activeConnections = connections || [];
   const results = await Promise.allSettled(
-    (connections || []).map((connection) => {
+    activeConnections.map((connection) => {
       const isAssignedPerson = companion?.user_id && connection.user_id === companion.user_id;
       const heading =
         action === "removed"
@@ -169,5 +175,37 @@ export async function POST(request: Request) {
 
   const sent = results.filter((result) => result.status === "fulfilled").length;
   const failed = results.length - sent;
-  return NextResponse.json({ sent, failed });
+  const logResults = await Promise.allSettled(
+    results.flatMap((result, index) => {
+      if (result.status !== "fulfilled") return [];
+      const connection = activeConnections[index];
+      return [
+        (async () => {
+          const { error } = await supabase.from("notification_logs").insert({
+            appointment_id: appointment.id,
+            reminder_setting_id: null,
+            notification_type: notificationType[action],
+            channel: "line",
+            recipient_user_id: connection.user_id,
+            line_user_id: connection.line_user_id
+          });
+          if (error) throw new Error(error.message);
+        })()
+      ];
+    })
+  );
+  const logged = logResults.filter((result) => result.status === "fulfilled").length;
+
+  results.forEach((result, index) => {
+    if (result.status === "rejected") {
+      console.error("LINE companion notification failed", {
+        appointmentId,
+        action,
+        recipientUserId: activeConnections[index]?.user_id,
+        error: result.reason instanceof Error ? result.reason.message : String(result.reason)
+      });
+    }
+  });
+
+  return NextResponse.json({ sent, failed, logged });
 }
