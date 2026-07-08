@@ -139,15 +139,31 @@ export async function updateCurrentUserName(displayName: string) {
     const members = readJson<GroupMember[]>(MEMBERS_KEY, []).map((member) =>
       member.user_id === user.id ? { ...member, display_name: nextName, contact: user.email } : member
     );
+    const companions = readJson<AppointmentCompanion[]>(COMPANIONS_KEY, []).map((companion) =>
+      companion.user_id === user.id ? { ...companion, display_name: nextName, contact: user.email } : companion
+    );
     writeJson(MEMBERS_KEY, members);
+    writeJson(COMPANIONS_KEY, companions);
     return nextUser;
   }
 
-  const { error } = await supabase
+  const { error: memberError } = await supabase
     .from("group_members")
     .update({ display_name: nextName, contact: user.email })
     .eq("user_id", user.id);
-  throwIfError(error);
+  throwIfError(memberError);
+
+  const { error: companionError } = await supabase
+    .from("appointment_companions")
+    .update({ display_name: nextName, contact: user.email })
+    .eq("user_id", user.id);
+  throwIfError(companionError);
+
+  await supabase
+    .from("line_connections")
+    .update({ display_name: nextName, updated_at: now() })
+    .eq("user_id", user.id);
+
   return nextUser;
 }
 

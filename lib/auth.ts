@@ -109,10 +109,11 @@ export async function updateDisplayName(displayName: string) {
   if (!normalized) throw new Error("名前を入力してください。");
 
   if (supabase) {
-    const { error } = await supabase.auth.updateUser({
+    const { data, error } = await supabase.auth.updateUser({
       data: { display_name: normalized }
     });
     if (error) throw new Error(friendlyAuthError(error.message));
+    if (data.user) setCurrentUser(userFromSupabase(data.user, normalized));
   }
 
   return updateCurrentUserName(normalized);
