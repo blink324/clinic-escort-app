@@ -34,6 +34,14 @@ const dateFormatter = new Intl.DateTimeFormat("ja-JP", {
   minute: "2-digit"
 });
 
+function reminderValues(appointment: AppointmentView) {
+  return {
+    one_week_before: appointment.reminders.find((reminder) => reminder.reminder_type === "one_week_before")?.enabled ?? true,
+    one_day_before: appointment.reminders.find((reminder) => reminder.reminder_type === "one_day_before")?.enabled ?? true,
+    same_day_morning: appointment.reminders.find((reminder) => reminder.reminder_type === "same_day_morning")?.enabled ?? true
+  } satisfies Record<ReminderType, boolean>;
+}
+
 export function AppointmentDetail({ appointment: initialAppointment, shared = false }: Props) {
   const router = useRouter();
   const [appointment, setAppointment] = useState(initialAppointment);
@@ -49,14 +57,8 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
     appointment_datetime: initialAppointment.appointment_datetime.slice(0, 16),
     items_to_bring: initialAppointment.items_to_bring,
     memo: initialAppointment.memo,
-    reminders: {
-      one_week_before:
-        initialAppointment.reminders.find((reminder) => reminder.reminder_type === "one_week_before")?.enabled ?? true,
-      one_day_before:
-        initialAppointment.reminders.find((reminder) => reminder.reminder_type === "one_day_before")?.enabled ?? true,
-      same_day_morning:
-        initialAppointment.reminders.find((reminder) => reminder.reminder_type === "same_day_morning")?.enabled ?? true
-    } satisfies Record<ReminderType, boolean>
+    reservation_image_url: initialAppointment.reservation_image_url || "",
+    reminders: reminderValues(initialAppointment)
   });
   const user = getCurrentUser();
   const shareUrl = useMemo(() => {
@@ -140,6 +142,13 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
     setEditForm((current) => ({ ...current, [key]: value }));
   }
 
+  function updateReservationImage(file?: File) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => updateEditForm("reservation_image_url", String(reader.result || ""));
+    reader.readAsDataURL(file);
+  }
+
   async function saveEditedAppointment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSavingAppointment(true);
@@ -152,6 +161,7 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
         appointment_datetime: editForm.appointment_datetime,
         items_to_bring: editForm.items_to_bring,
         memo: editForm.memo,
+        reservation_image_url: editForm.reservation_image_url || current.reservation_image_url,
         reminders: current.reminders.map((reminder) => ({
           ...reminder,
           enabled: editForm.reminders[reminder.reminder_type]
@@ -160,6 +170,42 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
       setEditingAppointment(false);
     } finally {
       setSavingAppointment(false);
+    }
+  }
+
+  async function toggleReminder(reminderType: ReminderType) {
+    const originalReminders = reminderValues(appointment);
+    const nextReminders = {
+      ...originalReminders,
+      [reminderType]: !originalReminders[reminderType]
+    };
+
+    setAppointment((current) => ({
+      ...current,
+      reminders: current.reminders.map((reminder) =>
+        reminder.reminder_type === reminderType ? { ...reminder, enabled: nextReminders[reminderType] } : reminder
+      )
+    }));
+    setEditForm((current) => ({ ...current, reminders: nextReminders }));
+
+    try {
+      await updateAppointment(appointment.id, {
+        hospital_name: appointment.hospital_name,
+        department: appointment.department,
+        appointment_datetime: appointment.appointment_datetime,
+        items_to_bring: appointment.items_to_bring,
+        memo: appointment.memo,
+        reminders: nextReminders
+      });
+    } catch {
+      setAppointment((current) => ({
+        ...current,
+        reminders: current.reminders.map((reminder) => ({
+          ...reminder,
+          enabled: originalReminders[reminder.reminder_type]
+        }))
+      }));
+      setEditForm((current) => ({ ...current, reminders: originalReminders }));
     }
   }
 
@@ -262,9 +308,14 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
             <p>{enabledReminderText(appointment)}</p>
             <div className="mini-list">
               {appointment.reminders.map((reminder) => (
-                <span key={reminder.id} className={reminder.enabled ? "mini-pill on" : "mini-pill"}>
+                <button
+                  key={reminder.id}
+                  className={reminder.enabled ? "mini-pill on" : "mini-pill"}
+                  onClick={() => void toggleReminder(reminder.reminder_type)}
+                  type="button"
+                >
                   {reminderTypeLabel[reminder.reminder_type]} {reminder.enabled ? "ON" : "OFF"}
-                </span>
+                </button>
               ))}
             </div>
           </div>
@@ -354,6 +405,15 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
                 メモ
                 <textarea rows={4} value={editForm.memo} onChange={(event) => updateEditForm("memo", event.target.value)} />
               </label>
+              <label>
+                予約票写真
+                <input accept="image/*" onChange={(event) => updateReservationImage(event.target.files?.[0])} type="file" />
+              </label>
+              {editForm.reservation_image_url && (
+                <div className="reservation-edit-preview">
+                  <img className="reservation-preview" src={editForm.reservation_image_url} alt="予約票プレビュー" />
+                </div>
+              )}
               <fieldset className="reminder-fieldset">
                 <legend>リマインド設定</legend>
                 {[

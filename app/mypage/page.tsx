@@ -6,6 +6,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { LineNotificationButton } from "@/components/LineNotificationButton";
 import { getActiveUser, signOut, updateDisplayName } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
+import { deleteMyAppData } from "@/lib/storage";
 import type { AuthUser } from "@/lib/types";
 
 type LineConnection = {
@@ -18,7 +19,9 @@ export default function MyPage() {
   const [user, setUser] = useState<AuthUser | null>();
   const [displayName, setDisplayName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [message, setMessage] = useState("");
+  const [deleteMessage, setDeleteMessage] = useState("");
   const [lineConnection, setLineConnection] = useState<LineConnection | null>();
 
   async function loadProfile() {
@@ -63,6 +66,28 @@ export default function MyPage() {
   async function handleSignOut() {
     await signOut();
     window.location.href = "/";
+  }
+
+  async function handleDeleteData() {
+    const ok = window.confirm(
+      "アプリ内の共有先、通院予定、付き添い担当、LINE連携情報を削除します。元に戻せません。実行しますか？"
+    );
+    if (!ok) return;
+    setDeleting(true);
+    setDeleteMessage("");
+    try {
+      await deleteMyAppData();
+      await signOut();
+      window.location.href = "/";
+    } catch (caught) {
+      setDeleteMessage(
+        caught instanceof Error
+          ? `削除できませんでした。時間を置いて再度お試しください。詳細: ${caught.message}`
+          : "削除できませんでした。時間を置いて再度お試しください。"
+      );
+    } finally {
+      setDeleting(false);
+    }
   }
 
   if (user === undefined) return <main className="mobile-shell with-nav">読み込み中です</main>;
@@ -125,6 +150,29 @@ export default function MyPage() {
           )}
         </div>
         <LineNotificationButton full />
+        <p className="help-text">
+          通知が届かない場合は、つきそい公式LINEを友だち追加しているか確認してください。
+        </p>
+      </section>
+
+      <section className="profile-panel">
+        <h2>サポート</h2>
+        <div className="profile-link-list">
+          <Link href="/contact">お問い合わせ</Link>
+          <Link href="/terms">利用規約</Link>
+          <Link href="/privacy">プライバシーポリシー</Link>
+        </div>
+      </section>
+
+      <section className="profile-panel danger-zone">
+        <h2>データ削除</h2>
+        <p>
+          共有先、通院予定、付き添い担当、LINE連携情報を削除します。ログイン用アカウント自体の完全削除が必要な場合は、お問い合わせから連絡してください。
+        </p>
+        {deleteMessage && <p className="error-text">{deleteMessage}</p>}
+        <button className="danger-action full" disabled={deleting} onClick={() => void handleDeleteData()} type="button">
+          {deleting ? "削除中..." : "アプリ内データを削除する"}
+        </button>
       </section>
 
       <section className="profile-panel">

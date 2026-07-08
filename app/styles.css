@@ -544,10 +544,15 @@ button { cursor: pointer; }
 .mini-pill {
   background: #edf2fa;
   border-radius: 999px;
+  border: 0;
   color: var(--muted);
   font-size: 0.82rem;
   font-weight: 800;
   padding: 7px 10px;
+}
+
+.mini-pill {
+  cursor: pointer;
 }
 
 .schedule-card.urgent .schedule-meta span:first-child {
@@ -836,6 +841,15 @@ textarea { line-height: 1.6; resize: vertical; }
   width: 100%;
 }
 
+.reservation-edit-preview {
+  display: grid;
+  gap: 8px;
+}
+
+.reservation-edit-preview .reservation-preview {
+  max-height: 300px;
+}
+
 .focus-panel {
   display: grid;
   gap: 14px;
@@ -860,6 +874,33 @@ textarea { line-height: 1.6; resize: vertical; }
 .profile-panel p {
   color: var(--muted);
   line-height: 1.6;
+  margin: 0;
+}
+
+.profile-panel.danger-zone {
+  border-color: #f0c4cc;
+}
+
+.profile-link-list {
+  display: grid;
+  gap: 10px;
+}
+
+.profile-link-list a {
+  background: #f4f7fb;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  font-weight: 900;
+  padding: 14px;
+  text-decoration: none;
+}
+
+.help-text {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.55;
   margin: 0;
 }
 
@@ -1092,6 +1133,104 @@ textarea { line-height: 1.6; resize: vertical; }
 
 .error-text { color: var(--danger) !important; font-weight: 800; }
 .notice-text { color: var(--primary-dark) !important; font-weight: 800; }
+
+.auth-help {
+  background: #f4f7fb;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+}
+
+.auth-help strong {
+  font-size: 0.92rem;
+}
+
+.auth-help p {
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.legal-inline {
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.55;
+  margin: 12px 0 0;
+  text-align: center;
+}
+
+.legal-inline.dark,
+.legal-inline.dark a {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.legal-inline a {
+  color: var(--primary);
+  font-weight: 900;
+}
+
+.legal-shell {
+  padding-bottom: 34px;
+}
+
+.legal-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+}
+
+.legal-card h1 {
+  font-size: 1.72rem;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.legal-card h2 {
+  font-size: 1.08rem;
+  margin: 8px 0 0;
+}
+
+.legal-card p {
+  color: var(--muted);
+  line-height: 1.75;
+  margin: 0;
+}
+
+.legal-card a {
+  color: var(--primary);
+  font-weight: 900;
+}
+
+.legal-card .legal-date {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-top: 8px;
+}
+
+.support-list {
+  display: grid;
+  gap: 10px;
+}
+
+.support-list div {
+  background: #f4f7fb;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 5px;
+  padding: 14px;
+}
+
+.support-list strong {
+  color: var(--text);
+}
 
 .line-connect-card {
   display: grid;

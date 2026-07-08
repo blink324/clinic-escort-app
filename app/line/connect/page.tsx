@@ -39,6 +39,21 @@ function loadLiffSdk() {
   });
 }
 
+function friendlyLineError(caught: unknown) {
+  const message = caught instanceof Error ? caught.message : "";
+  const lower = message.toLowerCase();
+  if (lower.includes("bad request") || lower.includes("invalid url")) {
+    return "LINE連携URLの設定に問題があります。しばらくしても直らない場合はお問い合わせください。";
+  }
+  if (lower.includes("developing status") || lower.includes("developer role")) {
+    return "LINEログインがまだ公開前の設定です。LINE Developersでチャネルを公開してください。";
+  }
+  if (lower.includes("network") || lower.includes("failed")) {
+    return "LINE連携の読み込みに失敗しました。通信状況を確認して、もう一度お試しください。";
+  }
+  return message || "LINE連携に失敗しました。時間を置いてもう一度お試しください。";
+}
+
 export default function LineConnectPage() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [status, setStatus] = useState("LINE連携を準備しています。");
@@ -87,7 +102,7 @@ export default function LineConnectPage() {
         setConnected(true);
         setStatus("LINE通知を受け取れるようになりました。");
       } catch (caught) {
-        setStatus(caught instanceof Error ? caught.message : "LINE連携に失敗しました。");
+        setStatus(friendlyLineError(caught));
       }
     }
 
@@ -102,6 +117,11 @@ export default function LineConnectPage() {
         <p className="eyebrow">LINE通知</p>
         <h1>{connected ? "連携できました" : "LINE通知を受け取る"}</h1>
         <p>{status}</p>
+        {!connected && (
+          <p className="help-text">
+            うまくいかない場合は、LINEログインチャネルが公開済みか、マイページでログインできているか確認してください。
+          </p>
+        )}
         {friendUrl && (
           <a className="line-action full" href={friendUrl} target="_blank" rel="noreferrer">
             つきそいLINEを友だち追加

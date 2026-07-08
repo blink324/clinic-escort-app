@@ -387,6 +387,73 @@ export async function leaveGroup(groupId: string) {
   throwIfError(error);
 }
 
+export async function deleteMyAppData() {
+  const user = getCurrentUser();
+  if (!user) throw new Error("ログインが必要です");
+
+  if (!supabase) {
+    const ownedGroupIds = readJson<PatientGroup[]>(GROUPS_KEY, [])
+      .filter((group) => group.owner_user_id === user.id)
+      .map((group) => group.id);
+    const ownedAppointmentIds = readJson<Appointment[]>(APPOINTMENTS_KEY, [])
+      .filter((appointment) => ownedGroupIds.includes(appointment.group_id))
+      .map((appointment) => appointment.id);
+
+    writeJson(
+      GROUPS_KEY,
+      readJson<PatientGroup[]>(GROUPS_KEY, []).filter((group) => !ownedGroupIds.includes(group.id))
+    );
+    writeJson(
+      MEMBERS_KEY,
+      readJson<GroupMember[]>(MEMBERS_KEY, []).filter(
+        (member) => member.user_id !== user.id && !ownedGroupIds.includes(member.group_id)
+      )
+    );
+    writeJson(
+      APPOINTMENTS_KEY,
+      readJson<Appointment[]>(APPOINTMENTS_KEY, []).filter((appointment) => !ownedGroupIds.includes(appointment.group_id))
+    );
+    writeJson(
+      COMPANIONS_KEY,
+      readJson<AppointmentCompanion[]>(COMPANIONS_KEY, []).filter(
+        (companion) => companion.user_id !== user.id && !ownedAppointmentIds.includes(companion.appointment_id)
+      )
+    );
+    writeJson(
+      REMINDERS_KEY,
+      readJson<ReminderSetting[]>(REMINDERS_KEY, []).filter(
+        (reminder) => !ownedAppointmentIds.includes(reminder.appointment_id)
+      )
+    );
+    signOutLocal();
+    return;
+  }
+
+  const { data: ownedGroups, error: groupReadError } = await supabase
+    .from("patient_groups")
+    .select("id")
+    .eq("owner_user_id", user.id);
+  throwIfError(groupReadError);
+
+  const ownedGroupIds = (ownedGroups || []).map((group) => group.id);
+
+  const { error: lineError } = await supabase.from("line_connections").delete().eq("user_id", user.id);
+  throwIfError(lineError);
+
+  const { error: companionError } = await supabase.from("appointment_companions").delete().eq("user_id", user.id);
+  throwIfError(companionError);
+
+  if (ownedGroupIds.length > 0) {
+    const { error: ownedGroupError } = await supabase.from("patient_groups").delete().in("id", ownedGroupIds);
+    throwIfError(ownedGroupError);
+  }
+
+  const { error: memberError } = await supabase.from("group_members").delete().eq("user_id", user.id);
+  throwIfError(memberError);
+
+  signOutLocal();
+}
+
 async function buildAppointmentViews(appointments: Appointment[], groups: PatientGroup[]) {
   const groupMap = new Map(groups.map((group) => [group.id, group]));
   if (appointments.length === 0) return [];
@@ -551,7 +618,9 @@ export async function updateAppointmentStatus(id: string, status: AppointmentSta
 
 export async function updateAppointment(
   id: string,
-  input: Pick<AppointmentInput, "hospital_name" | "department" | "appointment_datetime" | "items_to_bring" | "memo" | "reminders">
+  input: Pick<AppointmentInput, "hospital_name" | "department" | "appointment_datetime" | "items_to_bring" | "memo" | "reminders"> & {
+    reservation_image_url?: string;
+  }
 ) {
   if (!supabase) {
     const updated = readJson<Appointment[]>(APPOINTMENTS_KEY, []).map((appointment) =>
@@ -563,6 +632,8 @@ export async function updateAppointment(
             appointment_datetime: input.appointment_datetime,
             items_to_bring: input.items_to_bring,
             memo: input.memo,
+            reservation_image_url:
+              input.reservation_image_url === undefined ? appointment.reservation_image_url : input.reservation_image_url,
             updated_at: now()
           }
         : appointment
@@ -583,6 +654,16 @@ export async function updateAppointment(
     })
     .eq("id", id);
   throwIfError(error);
+
+  if (input.reservation_image_url !== undefined) {
+    const imagePath = await uploadReservationImage(id, input.reservation_image_url);
+    const { error: imageError } = await supabase
+      .from("appointments")
+      .update({ reservation_image_url: imagePath })
+      .eq("id", id);
+    throwIfError(imageError);
+  }
+
   await saveReminderSettings(id, input.appointment_datetime, input.reminders);
 }
 
