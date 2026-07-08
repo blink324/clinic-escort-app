@@ -21,9 +21,11 @@ export default function MyPage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [testingLine, setTestingLine] = useState(false);
+  const [checkingReminders, setCheckingReminders] = useState(false);
   const [message, setMessage] = useState("");
   const [deleteMessage, setDeleteMessage] = useState("");
   const [lineTestMessage, setLineTestMessage] = useState("");
+  const [reminderCheckMessage, setReminderCheckMessage] = useState("");
   const [lineConnection, setLineConnection] = useState<LineConnection | null>();
 
   async function loadProfile() {
@@ -120,6 +122,46 @@ export default function MyPage() {
     }
   }
 
+  async function checkReminderNotifications() {
+    if (!supabase) {
+      setReminderCheckMessage("リマインド通知の設定がまだ完了していません。");
+      return;
+    }
+    setCheckingReminders(true);
+    setReminderCheckMessage("");
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) throw new Error("ログイン状態を確認できませんでした。もう一度ログインしてください。");
+
+      const response = await fetch("/api/cron/reminders", {
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        method: "POST"
+      });
+      const result = (await response.json().catch(() => ({}))) as {
+        checked?: number;
+        error?: string;
+        failed?: number;
+        sent?: number;
+        skipped?: number;
+      };
+      if (!response.ok) throw new Error(result.error || "リマインド通知を確認できませんでした。");
+      if ((result.sent || 0) > 0) {
+        setReminderCheckMessage(`リマインド通知を${result.sent}件送信しました。LINEを確認してください。`);
+      } else if ((result.checked || 0) === 0) {
+        setReminderCheckMessage("今すぐ送信するリマインドはありません。前日・当日朝になると送信対象になります。");
+      } else {
+        setReminderCheckMessage("送信対象は確認しましたが、すでに送信済みか、LINE連携済みの対象者がいませんでした。");
+      }
+    } catch (caught) {
+      setReminderCheckMessage(caught instanceof Error ? caught.message : "リマインド通知を確認できませんでした。");
+    } finally {
+      setCheckingReminders(false);
+    }
+  }
+
   if (user === undefined) return <main className="mobile-shell with-nav">読み込み中です</main>;
 
   if (!user) {
@@ -192,6 +234,24 @@ export default function MyPage() {
         <p className="help-text">
           通知が届かない場合は、つきそい公式LINEを友だち追加しているか確認してください。
         </p>
+      </section>
+
+      <section className="profile-panel">
+        <h2>リマインド通知テスト</h2>
+        <p>前日・当日朝など、今送信対象になっているリマインドを自分宛に確認します。</p>
+        <button
+          className="secondary-action full"
+          disabled={checkingReminders || !lineConnection?.notifications_enabled}
+          onClick={() => void checkReminderNotifications()}
+          type="button"
+        >
+          {checkingReminders ? "確認中..." : "今リマインド通知を確認する"}
+        </button>
+        {reminderCheckMessage && (
+          <p className={reminderCheckMessage.includes("送信しました") ? "notice-text" : "help-text"}>
+            {reminderCheckMessage}
+          </p>
+        )}
       </section>
 
       <section className="profile-panel">

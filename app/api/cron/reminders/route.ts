@@ -42,6 +42,10 @@ type NotificationLogRecord = {
   reminder_setting_id: string | null;
 };
 
+type ReminderRunOptions = {
+  onlyRecipientUserId?: string;
+};
+
 const reminderTitle: Record<ReminderType, string> = {
   one_week_before: "1週間後に通院予定があります",
   one_day_before: "明日は通院予定があります",
@@ -99,11 +103,14 @@ async function pushLineMessage(lineUserId: string, text: string) {
   }
 }
 
-export async function GET(request: Request) {
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
+function bearerToken(request: Request) {
+  const authorization = request.headers.get("authorization") || "";
+  const [scheme, token] = authorization.split(" ");
+  if (scheme?.toLowerCase() !== "bearer" || !token) return "";
+  return token.trim();
+}
 
+async function runReminderNotifications(request: Request, options: ReminderRunOptions = {}) {
   const supabase = adminClient();
   if (!supabase) {
     return NextResponse.json({ error: "SUPABASE_SERVICE_ROLE_KEY is not set" }, { status: 500 });
@@ -214,6 +221,10 @@ export async function GET(request: Request) {
     ].join("\n");
 
     for (const userId of memberUserIdsByGroup.get(appointment.group_id) || []) {
+      if (options.onlyRecipientUserId && userId !== options.onlyRecipientUserId) {
+        skipped += 1;
+        continue;
+      }
       if (sentLogKeys.has(`${reminder.id}:${userId}`)) {
         skipped += 1;
         continue;
@@ -250,4 +261,31 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.json({ checked: reminders.length, sent, failed, skipped });
+}
+
+export async function GET(request: Request) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  return runReminderNotifications(request);
+}
+
+export async function POST(request: Request) {
+  const supabase = adminClient();
+  if (!supabase) {
+    return NextResponse.json({ error: "SUPABASE_SERVICE_ROLE_KEY is not set" }, { status: 500 });
+  }
+
+  const token = bearerToken(request);
+  if (!token) {
+    return NextResponse.json({ error: "ログイン状態を確認できませんでした。もう一度ログインしてください。" }, { status: 401 });
+  }
+
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error || !data.user) {
+    return NextResponse.json({ error: "ログイン状態を確認できませんでした。もう一度ログインしてください。" }, { status: 401 });
+  }
+
+  return runReminderNotifications(request, { onlyRecipientUserId: data.user.id });
 }
