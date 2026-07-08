@@ -201,20 +201,11 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
         </section>
       )}
 
-      {!shared && (
+      {!shared && !appointment.companion && (
         <section className="next-actions">
-          {!appointment.companion && (
-            <button className="primary-action" onClick={() => void quickAssignMe()} type="button">
-              自分が付き添う
-            </button>
-          )}
-          <a className="line-action" href={lineUrl} target="_blank" rel="noreferrer">
-            LINEで共有
-          </a>
-          <button className="secondary-action" onClick={downloadCalendarFile} type="button">
-            カレンダー追加
+          <button className="primary-action" onClick={() => void quickAssignMe()} type="button">
+            自分が付き添う
           </button>
-          <LineNotificationButton />
         </section>
       )}
 
@@ -438,6 +429,16 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
               次の予定を登録
             </Link>
           </div>
+        </section>
+      )}
+
+      {!shared && (
+        <section className="line-notify-panel detail-bottom">
+          <div>
+            <strong>LINE通知</strong>
+            <p>付き添い担当や通院前のリマインド通知を管理できます。</p>
+          </div>
+          <LineNotificationButton full />
         </section>
       )}
     </article>

@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AuthPanel } from "@/components/AuthPanel";
 import { BottomNav } from "@/components/BottomNav";
 import { LineNotificationButton } from "@/components/LineNotificationButton";
-import { getActiveUser, signOut } from "@/lib/auth";
+import { getActiveUser } from "@/lib/auth";
 import { enabledReminderText } from "@/lib/reminders";
 import { getAppointments, seedDemoData } from "@/lib/storage";
 import type { AppointmentView, AuthUser } from "@/lib/types";
@@ -147,9 +147,7 @@ export default function HomePage() {
           <p className="eyebrow">予定</p>
           <h1>付き添い調整</h1>
         </div>
-        <button className="text-button" onClick={async () => { await signOut(); await refresh(); }}>
-          ログアウト
-        </button>
+        <Link className="secondary-action small" href="/mypage">マイページ</Link>
       </header>
 
       <section className={pendingCount > 0 ? "attention-panel" : "attention-panel calm"}>

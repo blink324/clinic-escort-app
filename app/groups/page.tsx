@@ -32,7 +32,10 @@ export default function GroupsPage() {
           <p className="eyebrow">家族共有</p>
           <h1>共有先</h1>
         </div>
-        <Link className="primary-action small" href="/appointments/new">予定登録</Link>
+        <div className="header-actions">
+          <Link className="secondary-action small" href="/mypage">マイページ</Link>
+          <Link className="primary-action small" href="/appointments/new">予定登録</Link>
+        </div>
       </header>
 
       {loading ? (
