@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
-import { updateDisplayName } from "@/lib/auth";
-import { getAppointments, getCurrentUser, getGroup, getGroupMembers, leaveGroup, updateGroup } from "@/lib/storage";
+import { getActiveUser, updateDisplayName } from "@/lib/auth";
+import { getAppointments, getGroup, getGroupMembers, leaveGroup, updateGroup } from "@/lib/storage";
 import type { AppointmentView, GroupMember, PatientGroup } from "@/lib/types";
 
 const dateFormatter = new Intl.DateTimeFormat("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -43,7 +43,7 @@ export default function GroupDetailPage() {
         group_name: nextGroup?.group_name || "",
         memo: nextGroup?.memo || ""
       });
-      const currentUser = getCurrentUser();
+      const currentUser = await getActiveUser();
       setMyName(currentUser?.display_name || "");
       setCurrentUserId(currentUser?.id || "");
       setMembers(await getGroupMembers(params.id));
@@ -73,6 +73,13 @@ export default function GroupDetailPage() {
       setMyName(user.display_name);
       setMembers((current) =>
         current.map((member) => (member.user_id === user.id ? { ...member, display_name: user.display_name } : member))
+      );
+      setAppointments((current) =>
+        current.map((appointment) =>
+          appointment.companion?.user_id === user.id
+            ? { ...appointment, companion: { ...appointment.companion, display_name: user.display_name } }
+            : appointment
+        )
       );
       setNameMessage("名前を更新しました");
       setEditingName(false);
@@ -166,14 +173,14 @@ export default function GroupDetailPage() {
               key={member.id}
               onClick={() => {
                 if (member.user_id === currentUserId) {
-                  setMyName(member.display_name);
+                  setMyName(myName || member.display_name);
                   setNameMessage("");
                   setEditingName(true);
                 }
               }}
               type="button"
             >
-              <strong>{member.display_name}</strong>
+              <strong>{member.user_id === currentUserId ? myName || member.display_name : member.display_name}</strong>
               <span>{member.user_id === currentUserId ? "自分・変更" : roleLabels[member.role]}</span>
             </button>
           ))}
