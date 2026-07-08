@@ -20,8 +20,10 @@ export default function MyPage() {
   const [displayName, setDisplayName] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [testingLine, setTestingLine] = useState(false);
   const [message, setMessage] = useState("");
   const [deleteMessage, setDeleteMessage] = useState("");
+  const [lineTestMessage, setLineTestMessage] = useState("");
   const [lineConnection, setLineConnection] = useState<LineConnection | null>();
 
   async function loadProfile() {
@@ -90,6 +92,34 @@ export default function MyPage() {
     }
   }
 
+  async function sendLineTestNotification() {
+    if (!supabase) {
+      setLineTestMessage("LINE通知の送信設定がまだ完了していません。");
+      return;
+    }
+    setTestingLine(true);
+    setLineTestMessage("");
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) throw new Error("ログイン状態を確認できませんでした。もう一度ログインしてください。");
+
+      const response = await fetch("/api/line/test-notification", {
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        method: "POST"
+      });
+      const result = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) throw new Error(result.error || "LINE通知を送信できませんでした。");
+      setLineTestMessage("テスト通知を送信しました。LINEを確認してください。");
+    } catch (caught) {
+      setLineTestMessage(caught instanceof Error ? caught.message : "LINE通知を送信できませんでした。");
+    } finally {
+      setTestingLine(false);
+    }
+  }
+
   if (user === undefined) return <main className="mobile-shell with-nav">読み込み中です</main>;
 
   if (!user) {
@@ -150,6 +180,15 @@ export default function MyPage() {
           )}
         </div>
         <LineNotificationButton full />
+        <button
+          className="secondary-action full"
+          disabled={testingLine || !lineConnection?.notifications_enabled}
+          onClick={() => void sendLineTestNotification()}
+          type="button"
+        >
+          {testingLine ? "送信中..." : "LINEテスト通知を送る"}
+        </button>
+        {lineTestMessage && <p className={lineTestMessage.includes("送信しました") ? "notice-text" : "error-text"}>{lineTestMessage}</p>}
         <p className="help-text">
           通知が届かない場合は、つきそい公式LINEを友だち追加しているか確認してください。
         </p>
