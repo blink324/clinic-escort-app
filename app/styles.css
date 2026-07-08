@@ -1089,7 +1089,17 @@ textarea { line-height: 1.6; resize: vertical; }
   display: grid;
   gap: 10px;
   margin-top: 4px;
+  position: relative;
   text-align: left;
+}
+
+.onboarding-close {
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  font-weight: 900;
+  justify-self: end;
+  padding: 0 2px 2px;
 }
 
 .onboarding-steps div {

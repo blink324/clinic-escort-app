@@ -14,6 +14,7 @@ const dateFormatter = new Intl.DateTimeFormat("ja-JP", { month: "numeric", day: 
 const timeFormatter = new Intl.DateTimeFormat("ja-JP", { hour: "2-digit", minute: "2-digit" });
 const monthFormatter = new Intl.DateTimeFormat("ja-JP", { year: "numeric", month: "long" });
 const selectedDateFormatter = new Intl.DateTimeFormat("ja-JP", { month: "long", day: "numeric", weekday: "long" });
+const ONBOARDING_SEEN_KEY = "tsukisoi-onboarding-seen";
 
 function localDateKey(date: Date) {
   const year = date.getFullYear();
@@ -79,6 +80,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [showPendingOnly, setShowPendingOnly] = useState(false);
   const [showPastHistory, setShowPastHistory] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   async function refresh() {
     setLoading(true);
@@ -91,6 +93,7 @@ export default function HomePage() {
 
   useEffect(() => {
     void refresh();
+    setShowOnboarding(window.localStorage.getItem(ONBOARDING_SEEN_KEY) !== "true");
   }, []);
 
   useEffect(() => {
@@ -137,6 +140,12 @@ export default function HomePage() {
   const selectedAppointments = futureAppointments.filter(
     (appointment) => appointment.appointment_datetime.slice(0, 10) === selectedDate
   );
+  const shouldShowOnboarding = !hasAnyAppointments && showOnboarding;
+
+  function closeOnboarding() {
+    window.localStorage.setItem(ONBOARDING_SEEN_KEY, "true");
+    setShowOnboarding(false);
+  }
 
   if (!user) return <AuthPanel onSignedIn={() => void refresh()} />;
 
@@ -220,8 +229,11 @@ export default function HomePage() {
           <Link className="primary-action full" href="/appointments/new">
             {hasAnyAppointments ? "次の通院予定を登録する" : "最初の通院予定を登録する"}
           </Link>
-          {!hasAnyAppointments && (
+          {shouldShowOnboarding && (
             <div className="onboarding-steps" aria-label="最初の使い方">
+              <button className="onboarding-close" onClick={closeOnboarding} type="button">
+                閉じる
+              </button>
               <div>
                 <span>1</span>
                 <strong>予定を登録</strong>
