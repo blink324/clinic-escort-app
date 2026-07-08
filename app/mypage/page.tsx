@@ -6,7 +6,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { LineNotificationButton } from "@/components/LineNotificationButton";
 import { getActiveUser, signOut, updateDisplayName } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
-import { deleteMyAppData } from "@/lib/storage";
+import { deleteMyAppData, getReminderTimeSettings, saveReminderTimeSettings, type ReminderTimeSettings } from "@/lib/storage";
 import type { AuthUser } from "@/lib/types";
 
 type LineConnection = {
@@ -37,12 +37,18 @@ export default function MyPage() {
   const [deleting, setDeleting] = useState(false);
   const [testingLine, setTestingLine] = useState(false);
   const [checkingReminders, setCheckingReminders] = useState(false);
+  const [savingReminderTimes, setSavingReminderTimes] = useState(false);
   const [message, setMessage] = useState("");
   const [deleteMessage, setDeleteMessage] = useState("");
   const [lineTestMessage, setLineTestMessage] = useState("");
   const [reminderCheckMessage, setReminderCheckMessage] = useState("");
+  const [reminderTimeMessage, setReminderTimeMessage] = useState("");
   const [lineConnection, setLineConnection] = useState<LineConnection | null>();
   const [notificationHistory, setNotificationHistory] = useState<NotificationHistoryItem[]>([]);
+  const [reminderTimes, setReminderTimes] = useState<ReminderTimeSettings>({
+    one_day_before: "09:00",
+    same_day_morning: "07:30"
+  });
 
   async function loadProfile() {
     const current = await getActiveUser();
@@ -64,6 +70,7 @@ export default function MyPage() {
   }
 
   useEffect(() => {
+    setReminderTimes(getReminderTimeSettings());
     void loadProfile();
   }, []);
 
@@ -211,6 +218,19 @@ export default function MyPage() {
     setNotificationHistory(result.logs || []);
   }
 
+  async function saveReminderTimes(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSavingReminderTimes(true);
+    setReminderTimeMessage("");
+    try {
+      const next = saveReminderTimeSettings(reminderTimes);
+      setReminderTimes(next);
+      setReminderTimeMessage("通知時刻を保存しました。これから作る予定に反映されます。");
+    } finally {
+      setSavingReminderTimes(false);
+    }
+  }
+
   if (user === undefined) return <main className="mobile-shell with-nav">読み込み中です</main>;
 
   if (!user) {
@@ -301,6 +321,35 @@ export default function MyPage() {
             {reminderCheckMessage}
           </p>
         )}
+      </section>
+
+      <section className="profile-panel">
+        <h2>リマインド時刻</h2>
+        <p>これから登録・編集する予定の前日通知と当日朝通知の時刻に使います。</p>
+        <form className="inline-form compact-form" onSubmit={(event) => void saveReminderTimes(event)}>
+          <label>
+            前日通知
+            <input
+              required
+              type="time"
+              value={reminderTimes.one_day_before}
+              onChange={(event) => setReminderTimes((current) => ({ ...current, one_day_before: event.target.value }))}
+            />
+          </label>
+          <label>
+            当日朝通知
+            <input
+              required
+              type="time"
+              value={reminderTimes.same_day_morning}
+              onChange={(event) => setReminderTimes((current) => ({ ...current, same_day_morning: event.target.value }))}
+            />
+          </label>
+          {reminderTimeMessage && <p className="notice-text">{reminderTimeMessage}</p>}
+          <button className="secondary-action full" disabled={savingReminderTimes} type="submit">
+            {savingReminderTimes ? "保存中..." : "通知時刻を保存"}
+          </button>
+        </form>
       </section>
 
       <section className="profile-panel">

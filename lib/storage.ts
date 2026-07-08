@@ -21,6 +21,17 @@ const MEMBERS_KEY = "escort-care-members";
 const APPOINTMENTS_KEY = "escort-care-appointments";
 const COMPANIONS_KEY = "escort-care-companions";
 const REMINDERS_KEY = "escort-care-reminders";
+const REMINDER_TIME_SETTINGS_KEY = "tsukisoi-reminder-time-settings";
+
+export type ReminderTimeSettings = {
+  one_day_before: string;
+  same_day_morning: string;
+};
+
+const defaultReminderTimeSettings: ReminderTimeSettings = {
+  one_day_before: "09:00",
+  same_day_morning: "07:30"
+};
 
 const reminderLabels: Record<ReminderType, string> = {
   one_week_before: "1週間前",
@@ -59,14 +70,33 @@ function writeJson<T>(key: string, value: T) {
   window.localStorage.setItem(key, JSON.stringify(value));
 }
 
+export function getReminderTimeSettings() {
+  return readJson<ReminderTimeSettings>(REMINDER_TIME_SETTINGS_KEY, defaultReminderTimeSettings);
+}
+
+export function saveReminderTimeSettings(settings: ReminderTimeSettings) {
+  const next = {
+    one_day_before: settings.one_day_before || defaultReminderTimeSettings.one_day_before,
+    same_day_morning: settings.same_day_morning || defaultReminderTimeSettings.same_day_morning
+  };
+  writeJson(REMINDER_TIME_SETTINGS_KEY, next);
+  return next;
+}
+
+function applyTime(date: Date, timeValue: string) {
+  const [hour, minute] = timeValue.split(":").map((value) => Number(value));
+  date.setHours(Number.isFinite(hour) ? hour : 9, Number.isFinite(minute) ? minute : 0, 0, 0);
+}
+
 function reminderDate(type: ReminderType, appointmentDatetime: string) {
   const date = new Date(appointmentDatetime);
+  const timeSettings = getReminderTimeSettings();
   if (type === "one_week_before") date.setDate(date.getDate() - 7);
   if (type === "one_day_before") {
     date.setDate(date.getDate() - 1);
-    date.setHours(9, 0, 0, 0);
+    applyTime(date, timeSettings.one_day_before);
   }
-  if (type === "same_day_morning") date.setHours(7, 30, 0, 0);
+  if (type === "same_day_morning") applyTime(date, timeSettings.same_day_morning);
   return date.toISOString();
 }
 
