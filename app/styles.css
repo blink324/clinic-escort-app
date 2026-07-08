@@ -931,6 +931,43 @@ textarea { line-height: 1.6; resize: vertical; }
   text-align: right;
 }
 
+.notification-history-list {
+  display: grid;
+  gap: 10px;
+}
+
+.notification-history-card {
+  background: #f4f7fb;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 8px;
+  padding: 13px;
+}
+
+.notification-history-card div {
+  align-items: flex-start;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.notification-history-card strong {
+  color: var(--text);
+  font-weight: 900;
+}
+
+.notification-history-card span {
+  color: var(--muted);
+  flex-shrink: 0;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.notification-history-card p {
+  font-size: 0.92rem;
+}
+
 .escort-box {
   border-radius: 8px;
   margin-top: 8px;

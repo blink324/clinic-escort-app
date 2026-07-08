@@ -15,6 +15,21 @@ type LineConnection = {
   updated_at: string | null;
 };
 
+type NotificationHistoryItem = {
+  appointment_datetime: string;
+  department: string;
+  hospital_name: string;
+  id: string;
+  label: string;
+  patient_name: string;
+  sent_at: string;
+};
+
+const historyDateFormatter = new Intl.DateTimeFormat("ja-JP", {
+  dateStyle: "medium",
+  timeStyle: "short"
+});
+
 export default function MyPage() {
   const [user, setUser] = useState<AuthUser | null>();
   const [displayName, setDisplayName] = useState("");
@@ -27,6 +42,7 @@ export default function MyPage() {
   const [lineTestMessage, setLineTestMessage] = useState("");
   const [reminderCheckMessage, setReminderCheckMessage] = useState("");
   const [lineConnection, setLineConnection] = useState<LineConnection | null>();
+  const [notificationHistory, setNotificationHistory] = useState<NotificationHistoryItem[]>([]);
 
   async function loadProfile() {
     const current = await getActiveUser();
@@ -44,6 +60,7 @@ export default function MyPage() {
       .eq("user_id", current.id)
       .maybeSingle<LineConnection>();
     setLineConnection(data || null);
+    await loadNotificationHistory();
   }
 
   useEffect(() => {
@@ -115,6 +132,7 @@ export default function MyPage() {
       const result = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) throw new Error(result.error || "LINE通知を送信できませんでした。");
       setLineTestMessage("テスト通知を送信しました。LINEを確認してください。");
+      await loadNotificationHistory();
     } catch (caught) {
       setLineTestMessage(caught instanceof Error ? caught.message : "LINE通知を送信できませんでした。");
     } finally {
@@ -150,6 +168,7 @@ export default function MyPage() {
       if (!response.ok) throw new Error(result.error || "リマインド通知を確認できませんでした。");
       if ((result.sent || 0) > 0) {
         setReminderCheckMessage(`リマインド通知を${result.sent}件送信しました。LINEを確認してください。`);
+        await loadNotificationHistory();
       } else if ((result.checked || 0) === 0) {
         setReminderCheckMessage("今すぐ送信するリマインドはありません。前日・当日朝になると送信対象になります。");
       } else {
@@ -160,6 +179,22 @@ export default function MyPage() {
     } finally {
       setCheckingReminders(false);
     }
+  }
+
+  async function loadNotificationHistory() {
+    if (!supabase) return;
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) return;
+
+    const response = await fetch("/api/line/notification-history", {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    if (!response.ok) return;
+    const result = (await response.json().catch(() => ({ logs: [] }))) as { logs?: NotificationHistoryItem[] };
+    setNotificationHistory(result.logs || []);
   }
 
   if (user === undefined) return <main className="mobile-shell with-nav">読み込み中です</main>;
@@ -251,6 +286,29 @@ export default function MyPage() {
           <p className={reminderCheckMessage.includes("送信しました") ? "notice-text" : "help-text"}>
             {reminderCheckMessage}
           </p>
+        )}
+      </section>
+
+      <section className="profile-panel">
+        <h2>最近のLINE通知</h2>
+        {notificationHistory.length === 0 ? (
+          <p>まだ通知履歴はありません。リマインドや付き添い通知を送るとここへ表示されます。</p>
+        ) : (
+          <div className="notification-history-list">
+            {notificationHistory.map((item) => (
+              <div className="notification-history-card" key={item.id}>
+                <div>
+                  <strong>{item.label}</strong>
+                  <span>{historyDateFormatter.format(new Date(item.sent_at))}</span>
+                </div>
+                <p>
+                  {item.patient_name ? `${item.patient_name}さん / ` : ""}
+                  {item.hospital_name || "予定情報なし"}
+                  {item.department ? ` / ${item.department}` : ""}
+                </p>
+              </div>
+            ))}
+          </div>
         )}
       </section>
 
