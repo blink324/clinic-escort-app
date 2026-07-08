@@ -3,6 +3,7 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 import "./styles.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.clinic-tsukisoi.jp"),
   title: "つきそい",
   description: "親や高齢家族の通院予定を共有し、誰が付き添うかを決めるWebアプリ",
   applicationName: "つきそい",
@@ -18,7 +19,29 @@ export const metadata: Metadata = {
     icon: "/icon.svg",
     apple: "/icon.svg"
   },
-  manifest: "/manifest.webmanifest"
+  manifest: "/manifest.webmanifest",
+  openGraph: {
+    title: "つきそい",
+    description: "家族の通院予定と付き添い担当を、ひとつに。",
+    images: [
+      {
+        url: "/og-image.svg",
+        width: 1200,
+        height: 630,
+        alt: "つきそい"
+      }
+    ],
+    locale: "ja_JP",
+    siteName: "つきそい",
+    type: "website",
+    url: "https://www.clinic-tsukisoi.jp"
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "つきそい",
+    description: "家族の通院予定と付き添い担当を、ひとつに。",
+    images: ["/og-image.svg"]
+  }
 };
 
 export const viewport: Viewport = {
