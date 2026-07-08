@@ -23,6 +23,7 @@ jobs:
               --output reminder-response.json \
               --write-out "%{http_code}" \
               --header "Authorization: Bearer $CRON_SECRET" \
+              --header "X-Cron-Secret: $CRON_SECRET" \
               "$CRON_URL")
           else
             http_code=$(curl --silent --show-error \

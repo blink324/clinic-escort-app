@@ -70,9 +70,11 @@ function adminClient() {
 }
 
 function isAuthorized(request: Request) {
-  const cronSecret = process.env.CRON_SECRET;
+  const cronSecret = process.env.CRON_SECRET?.trim();
   if (!cronSecret) return true;
-  return request.headers.get("authorization") === `Bearer ${cronSecret}`;
+  const authorization = request.headers.get("authorization")?.trim();
+  const cronSecretHeader = request.headers.get("x-cron-secret")?.trim();
+  return authorization === `Bearer ${cronSecret}` || cronSecretHeader === cronSecret;
 }
 
 async function pushLineMessage(lineUserId: string, text: string) {
