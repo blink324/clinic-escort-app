@@ -7,8 +7,8 @@ import { BottomNav } from "@/components/BottomNav";
 import { LineNotificationButton } from "@/components/LineNotificationButton";
 import { getActiveUser } from "@/lib/auth";
 import { enabledReminderText } from "@/lib/reminders";
-import { getAppointments, seedDemoData } from "@/lib/storage";
-import type { AppointmentView, AuthUser } from "@/lib/types";
+import { getAppointments, seedDemoData, updateAppointmentStatus } from "@/lib/storage";
+import type { AppointmentStatus, AppointmentView, AuthUser } from "@/lib/types";
 
 const dateFormatter = new Intl.DateTimeFormat("ja-JP", { month: "numeric", day: "numeric", weekday: "short" });
 const timeFormatter = new Intl.DateTimeFormat("ja-JP", { hour: "2-digit", minute: "2-digit" });
@@ -72,6 +72,12 @@ function isMyCompanion(appointment: AppointmentView, user: AuthUser) {
   return appointment.companion?.user_id === user.id;
 }
 
+function statusText(status: AppointmentStatus) {
+  if (status === "completed") return "受診完了";
+  if (status === "missed") return "未受診";
+  return "未確認";
+}
+
 export default function HomePage() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [appointments, setAppointments] = useState<AppointmentView[]>([]);
@@ -117,6 +123,10 @@ export default function HomePage() {
         .sort((a, b) => new Date(b.appointment_datetime).getTime() - new Date(a.appointment_datetime).getTime()),
     [appointments, nowTime]
   );
+  const unconfirmedPastAppointments = useMemo(
+    () => pastAppointments.filter((appointment) => appointment.status === "upcoming").slice(0, 3),
+    [pastAppointments]
+  );
 
   const grouped = useMemo(() => {
     const visibleAppointments = showPendingOnly
@@ -145,6 +155,13 @@ export default function HomePage() {
   function closeOnboarding() {
     window.localStorage.setItem(ONBOARDING_SEEN_KEY, "true");
     setShowOnboarding(false);
+  }
+
+  async function setAppointmentStatus(appointmentId: string, status: AppointmentStatus) {
+    await updateAppointmentStatus(appointmentId, status);
+    setAppointments((current) =>
+      current.map((appointment) => (appointment.id === appointmentId ? { ...appointment, status } : appointment))
+    );
   }
 
   if (!user) return <AuthPanel onSignedIn={() => void refresh()} />;
@@ -188,6 +205,51 @@ export default function HomePage() {
           通院予定を登録する
         </Link>
       </div>
+
+      {unconfirmedPastAppointments.length > 0 && (
+        <section className="after-visit-panel" aria-label="受診後の確認">
+          <div className="after-visit-heading">
+            <div>
+              <p className="eyebrow">受診後の確認</p>
+              <h2>受診しましたか？</h2>
+            </div>
+            <span>{unconfirmedPastAppointments.length}件</span>
+          </div>
+          <div className="after-visit-list">
+            {unconfirmedPastAppointments.map((appointment) => (
+              <article className="after-visit-card" key={appointment.id}>
+                <div>
+                  <strong>{appointment.group.patient_name}さんの通院</strong>
+                  <p>
+                    {dateFormatter.format(new Date(appointment.appointment_datetime))}{" "}
+                    {timeFormatter.format(new Date(appointment.appointment_datetime))}
+                  </p>
+                  <p>{appointment.hospital_name} / {appointment.department}</p>
+                </div>
+                <div className="after-visit-actions">
+                  <button
+                    className="primary-action"
+                    onClick={() => void setAppointmentStatus(appointment.id, "completed")}
+                    type="button"
+                  >
+                    受診完了
+                  </button>
+                  <button
+                    className="secondary-action"
+                    onClick={() => void setAppointmentStatus(appointment.id, "missed")}
+                    type="button"
+                  >
+                    未受診
+                  </button>
+                  <Link className="text-button" href={`/appointments/${appointment.id}`}>
+                    詳細
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       {hasAnyAppointments && (
         <>
@@ -371,11 +433,9 @@ export default function HomePage() {
             <div className="past-history-list">
               {pastAppointments.length === 0 && <p className="muted">過去の通院履歴はまだありません</p>}
               {pastAppointments.map((appointment) => (
-                <Link
+                <article
                   className="schedule-card past"
-                  href={`/appointments/${appointment.id}`}
                   key={appointment.id}
-                  onClick={() => setShowPastHistory(false)}
                 >
                   <div className="date-tile">
                     <span>{dateFormatter.format(new Date(appointment.appointment_datetime))}</span>
@@ -386,10 +446,36 @@ export default function HomePage() {
                     <p>{appointment.hospital_name} / {appointment.department}</p>
                     <div className="schedule-meta">
                       <span>{appointment.companion ? `付き添い: ${appointment.companion.display_name}` : "付き添い: 未定"}</span>
-                      <span>{appointment.status === "completed" ? "受診完了" : appointment.status === "missed" ? "未受診" : "未確認"}</span>
+                      <span>{statusText(appointment.status)}</span>
                     </div>
+                    {appointment.status === "upcoming" ? (
+                      <div className="history-status-actions">
+                        <button
+                          className="primary-action"
+                          onClick={() => void setAppointmentStatus(appointment.id, "completed")}
+                          type="button"
+                        >
+                          受診完了
+                        </button>
+                        <button
+                          className="secondary-action"
+                          onClick={() => void setAppointmentStatus(appointment.id, "missed")}
+                          type="button"
+                        >
+                          未受診
+                        </button>
+                      </div>
+                    ) : (
+                      <Link
+                        className="text-button history-detail-link"
+                        href={`/appointments/${appointment.id}`}
+                        onClick={() => setShowPastHistory(false)}
+                      >
+                        詳細を見る
+                      </Link>
+                    )}
                   </div>
-                </Link>
+                </article>
               ))}
             </div>
           </section>

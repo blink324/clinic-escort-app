@@ -472,6 +472,90 @@ button { cursor: pointer; }
   box-shadow: 0 14px 34px rgba(37, 99, 235, 0.12);
 }
 
+.after-visit-panel {
+  background: linear-gradient(135deg, #ffffff, #eef6ff);
+  border: 1px solid #c7d8ee;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 12px;
+  margin: 14px 0;
+  padding: 16px;
+}
+
+.after-visit-heading {
+  align-items: flex-start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.after-visit-heading h2 {
+  font-size: 1.35rem;
+  margin: 3px 0 0;
+}
+
+.after-visit-heading > span {
+  background: var(--primary);
+  border-radius: 999px;
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 900;
+  padding: 7px 10px;
+}
+
+.after-visit-list {
+  display: grid;
+  gap: 10px;
+}
+
+.after-visit-card {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.after-visit-card strong {
+  display: block;
+  font-size: 1.12rem;
+  margin-bottom: 5px;
+}
+
+.after-visit-card p {
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.after-visit-actions,
+.history-status-actions {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.after-visit-actions .text-button,
+.history-detail-link {
+  grid-column: 1 / -1;
+  justify-self: start;
+  padding: 4px 0;
+}
+
+.history-status-actions {
+  margin-top: 10px;
+}
+
+.history-status-actions .primary-action,
+.history-status-actions .secondary-action {
+  min-height: 44px;
+  padding: 10px 12px;
+}
+
 .status-badges {
   align-items: center;
   display: flex;
