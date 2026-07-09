@@ -7,7 +7,12 @@ import { useEffect, useMemo, useState } from "react";
 import { CompanionForm } from "@/components/CompanionForm";
 import { LineNotificationButton } from "@/components/LineNotificationButton";
 import { calendarFileName, createIcsFile, googleCalendarUrl } from "@/lib/calendar";
-import { appointmentDateTime, toDateTimeLocalValue, toStorageDateTime } from "@/lib/datetime";
+import {
+  appointmentDateTime,
+  appointmentDisplayDateTimeValue,
+  toDateTimeLocalValue,
+  toStorageDateTime
+} from "@/lib/datetime";
 import { notifyCompanionAssigned, notifyCompanionRemoved } from "@/lib/line-notify-client";
 import {
   deleteAppointment,
@@ -47,6 +52,7 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
     hospital_name: initialAppointment.hospital_name,
     department: initialAppointment.department,
     appointment_datetime: toDateTimeLocalValue(initialAppointment.appointment_datetime),
+    display_datetime: toDateTimeLocalValue(appointmentDisplayDateTimeValue(initialAppointment)),
     items_to_bring: initialAppointment.items_to_bring,
     memo: initialAppointment.memo,
     reservation_image_url: initialAppointment.reservation_image_url || "",
@@ -58,14 +64,15 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
     return `${window.location.origin}/share/${appointment.share_token}`;
   }, [appointment.share_token]);
   const calendarUrl = useMemo(() => googleCalendarUrl(appointment), [appointment]);
+  const displayDateTime = appointmentDisplayDateTimeValue(appointment);
   const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(
     `${appointment.group.patient_name}さんの通院予定\n${appointment.hospital_name} ${appointment.department}\n${appointmentDateTime(
-      appointment.appointment_datetime
+      displayDateTime
     )}\n付き添い調整: ${shareUrl}`
   )}`;
   const companionNoticeLineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(
     `${appointment.group.patient_name}さんの通院付き添いが決まりました\n\n${appointmentDateTime(
-      appointment.appointment_datetime
+      displayDateTime
     )}\n${appointment.hospital_name} / ${appointment.department}\n付き添い: ${
       appointment.companion?.display_name || "未定"
     }さん\n\n確認する: ${shareUrl}`
@@ -153,6 +160,8 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
         hospital_name: editForm.hospital_name,
         department: editForm.department,
         appointment_datetime: nextAppointmentDatetime,
+        display_datetime:
+          updatedAppointment?.display_datetime || editForm.display_datetime || toDateTimeLocalValue(nextAppointmentDatetime),
         items_to_bring: editForm.items_to_bring,
         memo: editForm.memo,
         reservation_image_url:
@@ -165,6 +174,8 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
       setEditForm((current) => ({
         ...current,
         appointment_datetime: toDateTimeLocalValue(nextAppointmentDatetime),
+        display_datetime:
+          updatedAppointment?.display_datetime || current.display_datetime || toDateTimeLocalValue(nextAppointmentDatetime),
         reservation_image_url:
           current.reservation_image_url || updatedAppointment?.reservation_image_url || appointment.reservation_image_url || ""
       }));
@@ -194,6 +205,7 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
         hospital_name: appointment.hospital_name,
         department: appointment.department,
         appointment_datetime: appointment.appointment_datetime,
+        display_datetime: appointment.display_datetime || toDateTimeLocalValue(appointment.appointment_datetime),
         items_to_bring: appointment.items_to_bring,
         memo: appointment.memo,
         reminders: nextReminders
@@ -241,7 +253,7 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
             <strong>{appointment.hospital_name}</strong>
             <span>{appointment.department}</span>
           </div>
-          <p className="large-date">{appointmentDateTime(appointment.appointment_datetime)}</p>
+          <p className="large-date">{appointmentDateTime(displayDateTime)}</p>
           <div className="summary-tags">
             <span>{appointment.companion ? `付き添い: ${appointment.companion.display_name}さん` : "付き添い未定"}</span>
           </div>
@@ -386,7 +398,7 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
                 />
               </label>
               <label>
-                受診日時
+                予約日時
                 <input
                   required
                   type="datetime-local"
@@ -394,6 +406,16 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
                   onChange={(event) => updateEditForm("appointment_datetime", event.target.value)}
                 />
               </label>
+              <label>
+                画面に表示する日時
+                <input
+                  required
+                  type="datetime-local"
+                  value={editForm.display_datetime}
+                  onChange={(event) => updateEditForm("display_datetime", event.target.value)}
+                />
+              </label>
+              <p className="help-text">通知が正しく届いている場合は、ここだけ直すと画面上の日時を合わせられます。</p>
               <label>
                 持ち物
                 <textarea

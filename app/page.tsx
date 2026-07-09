@@ -8,6 +8,7 @@ import { LineNotificationButton } from "@/components/LineNotificationButton";
 import { getActiveUser } from "@/lib/auth";
 import {
   appointmentDate,
+  appointmentDisplayDateTimeValue,
   appointmentTime,
   localDateKeyFromDate,
   localDateKeyFromDateTime
@@ -60,7 +61,7 @@ function monthDays(appointments: AppointmentView[]) {
       key,
       inMonth: date.getMonth() === current.getMonth(),
       isToday: key === todayKey,
-      count: appointments.filter((appointment) => localDateKeyFromDateTime(appointment.appointment_datetime) === key).length
+      count: appointments.filter((appointment) => localDateKeyFromDateTime(visibleDateTime(appointment)) === key).length
     };
   });
 }
@@ -73,6 +74,10 @@ function statusText(status: AppointmentStatus) {
   if (status === "completed") return "受診完了";
   if (status === "missed") return "未受診";
   return "未確認";
+}
+
+function visibleDateTime(appointment: AppointmentView) {
+  return appointmentDisplayDateTimeValue(appointment);
 }
 
 export default function HomePage() {
@@ -135,7 +140,7 @@ export default function HomePage() {
       ? futureAppointments.filter((appointment) => !appointment.companion)
       : futureAppointments;
     return visibleAppointments.reduce<Record<string, AppointmentView[]>>((acc, appointment) => {
-      const bucket = bucketFor(appointment.appointment_datetime);
+      const bucket = bucketFor(visibleDateTime(appointment));
       acc[bucket] = [...(acc[bucket] || []), appointment];
       return acc;
     }, {});
@@ -150,7 +155,7 @@ export default function HomePage() {
     : futureAppointments;
   const calendarDays = useMemo(() => monthDays(calendarAppointments), [calendarAppointments]);
   const selectedAppointments = futureAppointments.filter(
-    (appointment) => localDateKeyFromDateTime(appointment.appointment_datetime) === selectedDate
+    (appointment) => localDateKeyFromDateTime(visibleDateTime(appointment)) === selectedDate
   );
   const shouldShowOnboarding = !hasAnyAppointments && showOnboarding;
 
@@ -253,7 +258,7 @@ export default function HomePage() {
                 <div>
                   <strong>{appointment.group.patient_name}さんの通院</strong>
                   <p>
-                    {appointmentDate(appointment.appointment_datetime)} {appointmentTime(appointment.appointment_datetime)}
+                    {appointmentDate(visibleDateTime(appointment))} {appointmentTime(visibleDateTime(appointment))}
                   </p>
                   <p>{appointment.hospital_name} / {appointment.department}</p>
                 </div>
@@ -361,17 +366,17 @@ export default function HomePage() {
                   href={`/appointments/${appointment.id}`}
                   key={appointment.id}
                 >
-                  {(isMyCompanion(appointment, user) || dayStatus(appointment.appointment_datetime)) && (
+                  {(isMyCompanion(appointment, user) || dayStatus(visibleDateTime(appointment))) && (
                     <div className="status-badges">
                       {isMyCompanion(appointment, user) && <span className="self-escort-badge">私が付き添い</span>}
-                      {dayStatus(appointment.appointment_datetime) && (
-                        <span className="soon-badge">{dayStatus(appointment.appointment_datetime)}</span>
+                      {dayStatus(visibleDateTime(appointment)) && (
+                        <span className="soon-badge">{dayStatus(visibleDateTime(appointment))}</span>
                       )}
                     </div>
                   )}
                   <div className="date-tile">
-                    <span>{appointmentDate(appointment.appointment_datetime)}</span>
-                    <strong>{appointmentTime(appointment.appointment_datetime)}</strong>
+                    <span>{appointmentDate(visibleDateTime(appointment))}</span>
+                    <strong>{appointmentTime(visibleDateTime(appointment))}</strong>
                   </div>
                   <div className="schedule-main">
                     <strong>{appointment.group.patient_name}</strong>
@@ -428,15 +433,15 @@ export default function HomePage() {
                 href={`/appointments/${appointment.id}`}
                 key={appointment.id}
               >
-                {(isMyCompanion(appointment, user) || dayStatus(appointment.appointment_datetime)) && (
+                {(isMyCompanion(appointment, user) || dayStatus(visibleDateTime(appointment))) && (
                   <div className="status-badges">
                     {isMyCompanion(appointment, user) && <span className="self-escort-badge">私が付き添い</span>}
-                    {dayStatus(appointment.appointment_datetime) && (
-                      <span className="soon-badge">{dayStatus(appointment.appointment_datetime)}</span>
+                    {dayStatus(visibleDateTime(appointment)) && (
+                      <span className="soon-badge">{dayStatus(visibleDateTime(appointment))}</span>
                     )}
                   </div>
                 )}
-                <strong>{appointmentTime(appointment.appointment_datetime)}</strong>
+                <strong>{appointmentTime(visibleDateTime(appointment))}</strong>
                 <span>{appointment.group.patient_name}さん / {appointment.hospital_name}</span>
               </Link>
             ))}
@@ -469,8 +474,8 @@ export default function HomePage() {
                   key={appointment.id}
                 >
                   <div className="date-tile">
-                    <span>{appointmentDate(appointment.appointment_datetime)}</span>
-                    <strong>{appointmentTime(appointment.appointment_datetime)}</strong>
+                    <span>{appointmentDate(visibleDateTime(appointment))}</span>
+                    <strong>{appointmentTime(visibleDateTime(appointment))}</strong>
                   </div>
                   <div className="schedule-main">
                     <strong>{appointment.group.patient_name}</strong>

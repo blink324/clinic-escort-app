@@ -16,6 +16,7 @@ type ReminderRecord = {
 type AppointmentRecord = {
   appointment_datetime: string;
   department: string;
+  display_datetime?: string | null;
   group_id: string;
   hospital_name: string;
   id: string;
@@ -131,7 +132,7 @@ async function runReminderNotifications(request: Request, options: ReminderRunOp
   const appointmentIds = Array.from(new Set(reminders.map((reminder) => reminder.appointment_id)));
   const { data: appointments, error: appointmentError } = await supabase
     .from("appointments")
-    .select("id, group_id, hospital_name, department, appointment_datetime, share_token, status")
+    .select("id, group_id, hospital_name, department, appointment_datetime, display_datetime, share_token, status")
     .in("id", appointmentIds)
     .eq("status", "upcoming")
     .returns<AppointmentRecord[]>();
@@ -202,7 +203,7 @@ async function runReminderNotifications(request: Request, options: ReminderRunOp
       continue;
     }
 
-    const dateText = appointmentDateTime(appointment.appointment_datetime);
+    const dateText = appointmentDateTime(appointment.display_datetime || appointment.appointment_datetime);
     const shareUrl = `${appUrl}/share/${appointment.share_token}`;
     const text = [
       reminderTitle[reminder.reminder_type],

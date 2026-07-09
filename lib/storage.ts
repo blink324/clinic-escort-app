@@ -1,7 +1,7 @@
 "use client";
 
 import { reservationBucket, supabase } from "@/lib/supabase";
-import { toStorageDateTime } from "@/lib/datetime";
+import { toDateTimeLocalValue, toStorageDateTime } from "@/lib/datetime";
 import type {
   Appointment,
   AppointmentCompanion,
@@ -643,6 +643,7 @@ export async function getSharedAppointment(token: string): Promise<AppointmentVi
 export async function saveAppointment(input: AppointmentInput) {
   if (!supabase) return saveLocalAppointment(input);
   const appointmentDatetime = toStorageDateTime(input.appointment_datetime);
+  const displayDatetime = toDateTimeLocalValue(input.display_datetime || input.appointment_datetime);
 
   const { data: appointment, error } = await supabase
     .from("appointments")
@@ -651,6 +652,7 @@ export async function saveAppointment(input: AppointmentInput) {
       hospital_name: input.hospital_name,
       department: input.department,
       appointment_datetime: appointmentDatetime,
+      display_datetime: displayDatetime,
       items_to_bring: input.items_to_bring,
       memo: input.memo,
       reservation_image_url: "",
@@ -678,12 +680,14 @@ export async function saveAppointment(input: AppointmentInput) {
 function saveLocalAppointment(input: AppointmentInput) {
   const timestamp = now();
   const appointmentDatetime = toStorageDateTime(input.appointment_datetime);
+  const displayDatetime = toDateTimeLocalValue(input.display_datetime || input.appointment_datetime);
   const appointment: Appointment = {
     id: createId("appt"),
     group_id: input.group_id,
     hospital_name: input.hospital_name,
     department: input.department,
     appointment_datetime: appointmentDatetime,
+    display_datetime: displayDatetime,
     items_to_bring: input.items_to_bring,
     memo: input.memo,
     reservation_image_url: input.reservation_image_url,
@@ -712,10 +716,12 @@ export async function updateAppointmentStatus(id: string, status: AppointmentSta
 export async function updateAppointment(
   id: string,
   input: Pick<AppointmentInput, "hospital_name" | "department" | "appointment_datetime" | "items_to_bring" | "memo" | "reminders"> & {
+    display_datetime?: string;
     reservation_image_url?: string;
   }
 ) {
   const appointmentDatetime = toStorageDateTime(input.appointment_datetime);
+  const displayDatetime = toDateTimeLocalValue(input.display_datetime || input.appointment_datetime);
   if (!supabase) {
     let nextAppointment: Appointment | undefined;
     const updated = readJson<Appointment[]>(APPOINTMENTS_KEY, []).map((appointment) =>
@@ -725,6 +731,7 @@ export async function updateAppointment(
             hospital_name: input.hospital_name,
             department: input.department,
             appointment_datetime: appointmentDatetime,
+            display_datetime: displayDatetime,
             items_to_bring: input.items_to_bring,
             memo: input.memo,
             reservation_image_url:
@@ -744,6 +751,7 @@ export async function updateAppointment(
       hospital_name: input.hospital_name,
       department: input.department,
       appointment_datetime: appointmentDatetime,
+      display_datetime: displayDatetime,
       items_to_bring: input.items_to_bring,
       memo: input.memo
     })

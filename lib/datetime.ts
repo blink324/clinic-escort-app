@@ -90,3 +90,10 @@ export function appointmentDateTime(value: string) {
   const weekday = weekdayLabels[new Date(parts.year, parts.month - 1, parts.day).getDay()];
   return `${parts.year}年${parts.month}月${parts.day}日${weekday}曜日 ${pad(parts.hour)}:${pad(parts.minute)}`;
 }
+
+export function appointmentDisplayDateTimeValue(appointment: {
+  appointment_datetime: string;
+  display_datetime?: string | null;
+}) {
+  return appointment.display_datetime || appointment.appointment_datetime;
+}

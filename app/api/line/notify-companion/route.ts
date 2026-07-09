@@ -5,6 +5,7 @@ import { appointmentDateTime } from "@/lib/datetime";
 type AppointmentRecord = {
   appointment_datetime: string;
   department: string;
+  display_datetime?: string | null;
   group_id: string;
   hospital_name: string;
   id: string;
@@ -87,7 +88,7 @@ export async function POST(request: Request) {
 
   const { data: appointment, error: appointmentError } = await supabase
     .from("appointments")
-    .select("id, group_id, hospital_name, department, appointment_datetime, share_token")
+    .select("id, group_id, hospital_name, department, appointment_datetime, display_datetime, share_token")
     .eq("id", appointmentId)
     .single<AppointmentRecord>();
   if (appointmentError || !appointment) {
@@ -141,7 +142,7 @@ export async function POST(request: Request) {
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
   const shareUrl = `${appUrl}/share/${appointment.share_token}`;
-  const dateText = appointmentDateTime(appointment.appointment_datetime);
+  const dateText = appointmentDateTime(appointment.display_datetime || appointment.appointment_datetime);
 
   const activeConnections = connections || [];
   const results = await Promise.allSettled(

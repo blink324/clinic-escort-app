@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { getActiveUser, updateDisplayName } from "@/lib/auth";
-import { appointmentDateTime } from "@/lib/datetime";
+import { appointmentDateTime, appointmentDisplayDateTimeValue } from "@/lib/datetime";
 import { friendlyErrorMessage } from "@/lib/errors";
 import { getAppointments, getGroup, getGroupMembers, leaveGroup, regenerateGroupInviteToken, updateGroup } from "@/lib/storage";
 import type { AppointmentView, GroupMember, PatientGroup } from "@/lib/types";
@@ -226,7 +226,7 @@ export default function GroupDetailPage() {
         <div className="mini-schedules">
           {appointments.map((appointment) => (
             <Link href={`/appointments/${appointment.id}`} key={appointment.id}>
-              <strong>{appointmentDateTime(appointment.appointment_datetime)}</strong>
+              <strong>{appointmentDateTime(appointmentDisplayDateTimeValue(appointment))}</strong>
               <span>{appointment.hospital_name} / {appointment.companion ? appointment.companion.display_name : "付き添い未定"}</span>
             </Link>
           ))}

@@ -36,6 +36,7 @@ export type Appointment = {
   hospital_name: string;
   department: string;
   appointment_datetime: string;
+  display_datetime?: string | null;
   items_to_bring: string;
   memo: string;
   reservation_image_url?: string;
@@ -69,6 +70,7 @@ export type AppointmentInput = {
   hospital_name: string;
   department: string;
   appointment_datetime: string;
+  display_datetime?: string;
   items_to_bring: string;
   memo: string;
   reservation_image_url?: string;

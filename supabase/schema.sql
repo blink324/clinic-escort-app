@@ -27,6 +27,7 @@ create table if not exists appointments (
   hospital_name text not null,
   department text not null,
   appointment_datetime timestamptz not null,
+  display_datetime text,
   items_to_bring text,
   memo text,
   reservation_image_url text,
