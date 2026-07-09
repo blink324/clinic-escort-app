@@ -414,16 +414,6 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
                 />
               </label>
               <label>
-                画面に表示する日時
-                <input
-                  required
-                  type="datetime-local"
-                  value={editForm.display_datetime}
-                  onChange={(event) => updateEditForm("display_datetime", event.target.value)}
-                />
-              </label>
-              <p className="help-text">通知が正しく届いている場合は、ここだけ直すと画面上の日時を合わせられます。</p>
-              <label>
                 持ち物
                 <textarea
                   rows={3}

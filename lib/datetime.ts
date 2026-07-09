@@ -126,5 +126,5 @@ export function appointmentDisplayDateTimeValue(appointment: {
   appointment_datetime: string;
   display_datetime?: string | null;
 }) {
-  return normalizeDisplayDateTime(appointment.appointment_datetime, appointment.display_datetime);
+  return toDateTimeLocalValue(appointment.appointment_datetime);
 }
