@@ -9,6 +9,7 @@ type Props = {
 };
 
 type AuthMode = "login" | "register";
+type AuthMessageAction = "login" | null;
 
 export function AuthPanel({ onSignedIn }: Props) {
   const [showForm, setShowForm] = useState(false);
@@ -18,6 +19,7 @@ export function AuthPanel({ onSignedIn }: Props) {
   const [displayName, setDisplayName] = useState("");
   const [message, setMessage] = useState("");
   const [isNotice, setIsNotice] = useState(false);
+  const [messageAction, setMessageAction] = useState<AuthMessageAction>(null);
   const [submitting, setSubmitting] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -25,6 +27,7 @@ export function AuthPanel({ onSignedIn }: Props) {
     setSubmitting(true);
     setMessage("");
     setIsNotice(false);
+    setMessageAction(null);
 
     try {
       if (mode === "login") {
@@ -37,6 +40,7 @@ export function AuthPanel({ onSignedIn }: Props) {
       const text = authErrorMessage(caught);
       setMessage(text);
       setIsNotice(text.includes("確認メール"));
+      setMessageAction(mode === "register" && (text.includes("登録済み") || text.includes("ログイン")) ? "login" : null);
     } finally {
       setSubmitting(false);
     }
@@ -127,10 +131,25 @@ export function AuthPanel({ onSignedIn }: Props) {
             />
           </label>
           {message && <p className={isNotice ? "notice-text" : "error-text"}>{message}</p>}
+          {messageAction === "login" && (
+            <button
+              className="secondary-action full"
+              onClick={() => {
+                setMode("login");
+                setMessage("");
+                setIsNotice(false);
+                setMessageAction(null);
+              }}
+              type="button"
+            >
+              ログイン画面へ進む
+            </button>
+          )}
           <div className="auth-help">
             <strong>メールが届かない場合</strong>
             <p>
-              迷惑メールやプロモーションを確認してください。何度も送ると一時的に送信上限になることがあります。
+              すでに登録済みのメールアドレスには、新規登録メールが届かないことがあります。その場合はログインを選んでください。
+              迷惑メールやプロモーションも確認してください。
               <Link href="/help">詳しい確認方法</Link>
             </p>
           </div>

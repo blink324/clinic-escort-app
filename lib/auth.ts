@@ -23,6 +23,9 @@ function friendlyAuthError(message?: string) {
   if (lower.includes("rate limit")) {
     return "確認メールの送信回数が上限に達しました。しばらく待ってから再度お試しください。すでに登録済みの場合はログインを選んでください。";
   }
+  if (lower.includes("already registered") || lower.includes("already exists") || lower.includes("user already")) {
+    return "このメールアドレスはすでに登録済みです。ログインを選んでください。";
+  }
   if (lower.includes("invalid login credentials")) {
     return "メールアドレスまたはパスワードが違います。新規登録がまだの場合は、新規登録を選んでください。";
   }
@@ -80,6 +83,10 @@ export async function registerWithEmail(email: string, password: string, display
     const user = userFromSupabase(data.user, normalizedDisplayName);
     setCurrentUser(user);
     return user;
+  }
+
+  if (data.user?.identities && data.user.identities.length === 0) {
+    throw new Error("このメールアドレスはすでに登録済みです。ログインを選んでください。");
   }
 
   throw new Error("確認メールを送信しました。メール内のリンクを開いてから、ログインしてください。");
