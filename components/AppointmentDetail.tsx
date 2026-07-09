@@ -249,6 +249,8 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
   }
 
   const isPast = new Date(appointment.appointment_datetime).getTime() < Date.now();
+  const statusLabel =
+    appointment.status === "completed" ? "受診完了" : appointment.status === "missed" ? "未受診" : "未確認";
 
   return (
     <article className={shared ? "detail-stack shared-detail" : "detail-stack"}>
@@ -498,12 +500,21 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
       {isPast && !shared && (
         <section className="section-block compact">
           <h2>受診後の確認</h2>
+          <p className="help-text">現在の記録: {statusLabel}</p>
           <div className="action-grid">
-            <button className="primary-action" onClick={() => void setStatus("completed")}>
-              受診完了
+            <button
+              className={appointment.status === "completed" ? "primary-action" : "secondary-action"}
+              onClick={() => void setStatus("completed")}
+              type="button"
+            >
+              受診完了{appointment.status === "completed" ? "中" : "に変更"}
             </button>
-            <button className="secondary-action" onClick={() => void setStatus("missed")}>
-              未受診
+            <button
+              className={appointment.status === "missed" ? "primary-action" : "secondary-action"}
+              onClick={() => void setStatus("missed")}
+              type="button"
+            >
+              未受診{appointment.status === "missed" ? "中" : "に変更"}
             </button>
             <Link className="secondary-action" href={`/appointments/new?group=${appointment.group_id}`}>
               次の予定を登録

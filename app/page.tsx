@@ -93,6 +93,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [showPendingOnly, setShowPendingOnly] = useState(false);
   const [showPastHistory, setShowPastHistory] = useState(false);
+  const [hideAfterVisitPrompt, setHideAfterVisitPrompt] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   const refresh = useCallback(async (showSpinner = true) => {
@@ -124,15 +125,6 @@ export default function HomePage() {
     };
   }, [refresh]);
 
-  useEffect(() => {
-    if (!showPastHistory) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [showPastHistory]);
-
   const nowTime = Date.now();
   const futureAppointments = useMemo(
     () => appointments.filter((appointment) => new Date(appointment.appointment_datetime).getTime() >= nowTime),
@@ -149,6 +141,16 @@ export default function HomePage() {
     () => pastAppointments.filter((appointment) => appointment.status === "upcoming").slice(0, 3),
     [pastAppointments]
   );
+  const showAfterVisitPrompt = unconfirmedPastAppointments.length > 0 && !hideAfterVisitPrompt;
+
+  useEffect(() => {
+    if (!showPastHistory && !showAfterVisitPrompt) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [showPastHistory, showAfterVisitPrompt]);
 
   const grouped = useMemo(() => {
     const visibleAppointments = showPendingOnly
@@ -186,6 +188,7 @@ export default function HomePage() {
       current.map((appointment) => (appointment.id === appointmentId ? { ...appointment, status } : appointment))
     );
     if (target) {
+      setHideAfterVisitPrompt(false);
       setRecentAfterVisit({
         groupId: target.group_id,
         patientName: target.group.patient_name,
@@ -254,50 +257,6 @@ export default function HomePage() {
             <button className="secondary-action" onClick={() => setRecentAfterVisit(null)} type="button">
               閉じる
             </button>
-          </div>
-        </section>
-      )}
-
-      {unconfirmedPastAppointments.length > 0 && (
-        <section className="after-visit-panel" aria-label="受診後の確認">
-          <div className="after-visit-heading">
-            <div>
-              <p className="eyebrow">受診後の確認</p>
-              <h2>受診しましたか？</h2>
-            </div>
-            <span>{unconfirmedPastAppointments.length}件</span>
-          </div>
-          <div className="after-visit-list">
-            {unconfirmedPastAppointments.map((appointment) => (
-              <article className="after-visit-card" key={appointment.id}>
-                <div>
-                  <strong>{appointment.group.patient_name}さんの通院</strong>
-                  <p>
-                    {appointmentDate(visibleDateTime(appointment))} {appointmentTime(visibleDateTime(appointment))}
-                  </p>
-                  <p>{appointment.hospital_name} / {appointment.department}</p>
-                </div>
-                <div className="after-visit-actions">
-                  <button
-                    className="primary-action"
-                    onClick={() => void setAppointmentStatus(appointment.id, "completed")}
-                    type="button"
-                  >
-                    受診完了
-                  </button>
-                  <button
-                    className="secondary-action"
-                    onClick={() => void setAppointmentStatus(appointment.id, "missed")}
-                    type="button"
-                  >
-                    未受診
-                  </button>
-                  <Link className="text-button" href={`/appointments/${appointment.id}`}>
-                    詳細
-                  </Link>
-                </div>
-              </article>
-            ))}
           </div>
         </section>
       )}
@@ -499,41 +458,90 @@ export default function HomePage() {
                       <span>{appointment.companion ? `付き添い: ${appointment.companion.display_name}` : "付き添い: 未定"}</span>
                       <span>{statusText(appointment.status)}</span>
                     </div>
-                    {appointment.status === "upcoming" ? (
-                      <div className="history-status-actions">
-                        <button
-                          className="primary-action"
-                          onClick={() => void setAppointmentStatus(appointment.id, "completed")}
-                          type="button"
-                        >
-                          受診完了
-                        </button>
-                        <button
-                          className="secondary-action"
-                          onClick={() => void setAppointmentStatus(appointment.id, "missed")}
-                          type="button"
-                        >
-                          未受診
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="history-follow-actions">
-                        <Link
-                          className="secondary-action"
-                          href={`/appointments/${appointment.id}`}
-                          onClick={() => setShowPastHistory(false)}
-                        >
-                          詳細を見る
-                        </Link>
-                        <Link
-                          className="primary-action"
-                          href={`/appointments/new?group=${appointment.group_id}`}
-                          onClick={() => setShowPastHistory(false)}
-                        >
-                          {appointment.status === "completed" ? "次の予定を登録" : "再予約を登録"}
-                        </Link>
-                      </div>
-                    )}
+                    <div className="history-status-actions">
+                      <button
+                        className={appointment.status === "completed" ? "primary-action" : "secondary-action"}
+                        onClick={() => void setAppointmentStatus(appointment.id, "completed")}
+                        type="button"
+                      >
+                        受診完了{appointment.status === "completed" ? "中" : "に変更"}
+                      </button>
+                      <button
+                        className={appointment.status === "missed" ? "primary-action" : "secondary-action"}
+                        onClick={() => void setAppointmentStatus(appointment.id, "missed")}
+                        type="button"
+                      >
+                        未受診{appointment.status === "missed" ? "中" : "に変更"}
+                      </button>
+                    </div>
+                    <div className="history-follow-actions">
+                      <Link
+                        className="secondary-action"
+                        href={`/appointments/${appointment.id}`}
+                        onClick={() => setShowPastHistory(false)}
+                      >
+                        詳細を見る
+                      </Link>
+                      <Link
+                        className="primary-action"
+                        href={`/appointments/new?group=${appointment.group_id}`}
+                        onClick={() => setShowPastHistory(false)}
+                      >
+                        {appointment.status === "missed" ? "再予約を登録" : "次の予定を登録"}
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
+
+      {showAfterVisitPrompt && (
+        <div className="modal-backdrop top-modal" role="dialog" aria-modal="true" aria-labelledby="after-visit-title">
+          <section className="modal-panel after-visit-modal-panel">
+            <div className="modal-header">
+              <div>
+                <p className="eyebrow">受診後の確認</p>
+                <h2 id="after-visit-title">受診しましたか？</h2>
+              </div>
+              <button className="text-button" onClick={() => setHideAfterVisitPrompt(true)} type="button">
+                あとで
+              </button>
+            </div>
+            <div className="after-visit-summary">
+              <strong>{unconfirmedPastAppointments.length}件の通院が未確認です</strong>
+              <p>受診が終わっていたら記録して、次回の予定登録につなげましょう。</p>
+            </div>
+            <div className="after-visit-list">
+              {unconfirmedPastAppointments.map((appointment) => (
+                <article className="after-visit-card" key={appointment.id}>
+                  <div>
+                    <strong>{appointment.group.patient_name}さんの通院</strong>
+                    <p>
+                      {appointmentDate(visibleDateTime(appointment))} {appointmentTime(visibleDateTime(appointment))}
+                    </p>
+                    <p>{appointment.hospital_name} / {appointment.department}</p>
+                  </div>
+                  <div className="after-visit-actions">
+                    <button
+                      className="primary-action"
+                      onClick={() => void setAppointmentStatus(appointment.id, "completed")}
+                      type="button"
+                    >
+                      受診完了
+                    </button>
+                    <button
+                      className="secondary-action"
+                      onClick={() => void setAppointmentStatus(appointment.id, "missed")}
+                      type="button"
+                    >
+                      未受診
+                    </button>
+                    <Link className="text-button" href={`/appointments/${appointment.id}`}>
+                      詳細
+                    </Link>
                   </div>
                 </article>
               ))}

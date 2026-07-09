@@ -483,6 +483,34 @@ button { cursor: pointer; }
   padding: 16px;
 }
 
+.after-visit-modal-panel {
+  background: linear-gradient(135deg, #ffffff, #eef6ff);
+}
+
+.after-visit-summary {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid #d8e6f5;
+  border-radius: 8px;
+  display: grid;
+  gap: 4px;
+  margin-bottom: 12px;
+  padding: 14px;
+}
+
+.after-visit-summary strong {
+  color: var(--text);
+  font-size: 1.05rem;
+  line-height: 1.45;
+}
+
+.after-visit-summary p {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1.5;
+  margin: 0;
+}
+
 .after-visit-done-panel {
   background: #f1f8f4;
   border: 1px solid #bddcc8;
