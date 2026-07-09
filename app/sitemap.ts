@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 const baseUrl = "https://www.clinic-tsukisoi.jp";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return ["", "/about", "/terms", "/privacy", "/contact"].map((path) => ({
+  return ["", "/about", "/help", "/terms", "/privacy", "/contact"].map((path) => ({
     url: `${baseUrl}${path}`,
     lastModified: new Date(),
     changeFrequency: path === "" ? "weekly" : "monthly",

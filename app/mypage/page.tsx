@@ -389,6 +389,7 @@ export default function MyPage() {
       <section className="profile-panel">
         <h2>サポート</h2>
         <div className="profile-link-list">
+          <Link href="/help">ヘルプ</Link>
           <Link href="/contact">お問い合わせ</Link>
           <Link href="/terms">利用規約</Link>
           <Link href="/privacy">プライバシーポリシー</Link>

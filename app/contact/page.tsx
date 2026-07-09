@@ -15,6 +15,9 @@ export default function ContactPage() {
         <a className="primary-action full" href={`mailto:${supportEmail}?subject=つきそいへの問い合わせ`}>
           メールで問い合わせる
         </a>
+        <Link className="secondary-action full" href="/help">
+          よくある困りごとを見る
+        </Link>
         <div className="support-list">
           <div>
             <strong>メールが届かない場合</strong>

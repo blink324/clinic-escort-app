@@ -73,7 +73,7 @@ export function AuthPanel({ onSignedIn }: Props) {
             </button>
           </div>
           <p className="legal-inline dark">
-            <Link href="/about">どんなアプリ？</Link>・<Link href="/terms">利用規約</Link>・<Link href="/privacy">プライバシーポリシー</Link>
+            <Link href="/about">どんなアプリ？</Link>・<Link href="/help">ヘルプ</Link>・<Link href="/terms">利用規約</Link>・<Link href="/privacy">プライバシーポリシー</Link>
           </p>
         </div>
       </section>
@@ -129,7 +129,10 @@ export function AuthPanel({ onSignedIn }: Props) {
           {message && <p className={isNotice ? "notice-text" : "error-text"}>{message}</p>}
           <div className="auth-help">
             <strong>メールが届かない場合</strong>
-            <p>迷惑メールやプロモーションを確認してください。何度も送ると一時的に送信上限になることがあります。</p>
+            <p>
+              迷惑メールやプロモーションを確認してください。何度も送ると一時的に送信上限になることがあります。
+              <Link href="/help">詳しい確認方法</Link>
+            </p>
           </div>
           <button className="primary-action full" disabled={submitting} type="submit">
             {submitting ? "送信中..." : mode === "login" ? "ログイン" : "登録する"}

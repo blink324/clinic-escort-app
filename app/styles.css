@@ -1246,6 +1246,13 @@ textarea { line-height: 1.6; resize: vertical; }
   margin: 0;
 }
 
+.auth-help a {
+  color: var(--primary);
+  display: inline-block;
+  font-weight: 900;
+  margin-left: 4px;
+}
+
 .legal-inline {
   color: var(--muted);
   font-size: 0.84rem;
