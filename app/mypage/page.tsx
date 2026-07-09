@@ -6,7 +6,12 @@ import { BottomNav } from "@/components/BottomNav";
 import { LineNotificationButton } from "@/components/LineNotificationButton";
 import { getActiveUser, signOut, updateDisplayName } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
-import { deleteMyAppData, getReminderTimeSettings, saveReminderTimeSettings, type ReminderTimeSettings } from "@/lib/storage";
+import {
+  deleteMyAppData,
+  getActiveReminderTimeSettings,
+  saveActiveReminderTimeSettings,
+  type ReminderTimeSettings
+} from "@/lib/storage";
 import type { AuthUser } from "@/lib/types";
 
 type LineConnection = {
@@ -54,6 +59,7 @@ export default function MyPage() {
     const current = await getActiveUser();
     setUser(current);
     setDisplayName(current?.display_name || "");
+    setReminderTimes(await getActiveReminderTimeSettings());
 
     if (!current || !supabase) {
       setLineConnection(null);
@@ -70,7 +76,6 @@ export default function MyPage() {
   }
 
   useEffect(() => {
-    setReminderTimes(getReminderTimeSettings());
     void loadProfile();
   }, []);
 
@@ -223,9 +228,11 @@ export default function MyPage() {
     setSavingReminderTimes(true);
     setReminderTimeMessage("");
     try {
-      const next = saveReminderTimeSettings(reminderTimes);
+      const next = await saveActiveReminderTimeSettings(reminderTimes);
       setReminderTimes(next);
-      setReminderTimeMessage("通知時刻を保存しました。これから作る予定に反映されます。");
+      setReminderTimeMessage("通知時刻を保存しました。別の端末でも同じ設定を使えます。");
+    } catch (caught) {
+      setReminderTimeMessage(caught instanceof Error ? caught.message : "通知時刻を保存できませんでした。");
     } finally {
       setSavingReminderTimes(false);
     }
@@ -345,7 +352,11 @@ export default function MyPage() {
               onChange={(event) => setReminderTimes((current) => ({ ...current, same_day_morning: event.target.value }))}
             />
           </label>
-          {reminderTimeMessage && <p className="notice-text">{reminderTimeMessage}</p>}
+          {reminderTimeMessage && (
+            <p className={reminderTimeMessage.includes("保存しました") ? "notice-text" : "error-text"}>
+              {reminderTimeMessage}
+            </p>
+          )}
           <button className="secondary-action full" disabled={savingReminderTimes} type="submit">
             {savingReminderTimes ? "保存中..." : "通知時刻を保存"}
           </button>

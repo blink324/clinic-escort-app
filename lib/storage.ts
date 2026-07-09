@@ -83,14 +83,53 @@ export function saveReminderTimeSettings(settings: ReminderTimeSettings) {
   return next;
 }
 
+export async function getActiveReminderTimeSettings() {
+  const localSettings = getReminderTimeSettings();
+  const user = getCurrentUser();
+  if (!supabase || !user) return localSettings;
+
+  const { data, error } = await supabase
+    .from("user_preferences")
+    .select("reminder_one_day_before_time, reminder_same_day_morning_time")
+    .eq("user_id", user.id)
+    .maybeSingle<{
+      reminder_one_day_before_time: string | null;
+      reminder_same_day_morning_time: string | null;
+    }>();
+
+  if (error || !data) return localSettings;
+
+  return saveReminderTimeSettings({
+    one_day_before: data.reminder_one_day_before_time || localSettings.one_day_before,
+    same_day_morning: data.reminder_same_day_morning_time || localSettings.same_day_morning
+  });
+}
+
+export async function saveActiveReminderTimeSettings(settings: ReminderTimeSettings) {
+  const next = saveReminderTimeSettings(settings);
+  const user = getCurrentUser();
+  if (!supabase || !user) return next;
+
+  const { error } = await supabase.from("user_preferences").upsert(
+    {
+      user_id: user.id,
+      reminder_one_day_before_time: next.one_day_before,
+      reminder_same_day_morning_time: next.same_day_morning,
+      updated_at: now()
+    },
+    { onConflict: "user_id" }
+  );
+  throwIfError(error);
+  return next;
+}
+
 function applyTime(date: Date, timeValue: string) {
   const [hour, minute] = timeValue.split(":").map((value) => Number(value));
   date.setHours(Number.isFinite(hour) ? hour : 9, Number.isFinite(minute) ? minute : 0, 0, 0);
 }
 
-function reminderDate(type: ReminderType, appointmentDatetime: string) {
+function reminderDate(type: ReminderType, appointmentDatetime: string, timeSettings: ReminderTimeSettings) {
   const date = new Date(appointmentDatetime);
-  const timeSettings = getReminderTimeSettings();
   if (type === "one_week_before") date.setDate(date.getDate() - 7);
   if (type === "one_day_before") {
     date.setDate(date.getDate() - 1);
@@ -791,11 +830,12 @@ export async function saveReminderSettings(
   appointmentDatetime: string,
   settings: Record<ReminderType, boolean>
 ) {
+  const timeSettings = await getActiveReminderTimeSettings();
   const next = (Object.keys(reminderLabels) as ReminderType[]).map((type) => ({
     appointment_id: appointmentId,
     reminder_type: type,
     enabled: settings[type],
-    remind_at: reminderDate(type, appointmentDatetime)
+    remind_at: reminderDate(type, appointmentDatetime, timeSettings)
   }));
 
   if (!supabase) {
