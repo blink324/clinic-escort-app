@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AuthPanel } from "@/components/AuthPanel";
 import { BottomNav } from "@/components/BottomNav";
 import { LineNotificationButton } from "@/components/LineNotificationButton";
@@ -95,19 +95,34 @@ export default function HomePage() {
   const [showPastHistory, setShowPastHistory] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  async function refresh() {
-    setLoading(true);
+  const refresh = useCallback(async (showSpinner = true) => {
+    if (showSpinner) setLoading(true);
     const current = await getActiveUser();
     if (current) seedDemoData(current);
     setUser(current);
     setAppointments(current ? await getAppointments() : []);
-    setLoading(false);
-  }
+    if (showSpinner) setLoading(false);
+  }, []);
 
   useEffect(() => {
     void refresh();
     setShowOnboarding(window.localStorage.getItem(ONBOARDING_SEEN_KEY) !== "true");
-  }, []);
+  }, [refresh]);
+
+  useEffect(() => {
+    const refreshQuietly = () => void refresh(false);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") refreshQuietly();
+    };
+    window.addEventListener("focus", refreshQuietly);
+    window.addEventListener("pageshow", refreshQuietly);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      window.removeEventListener("focus", refreshQuietly);
+      window.removeEventListener("pageshow", refreshQuietly);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
+  }, [refresh]);
 
   useEffect(() => {
     if (!showPastHistory) return;
