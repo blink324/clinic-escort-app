@@ -37,6 +37,16 @@ function parseDateTimeLocalValue(value: string) {
   };
 }
 
+function utcClockDateTimeValue(value: string) {
+  if (!value) return "";
+  if (!hasTimeZone(value)) return value.slice(0, 16);
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value.slice(0, 16);
+  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}T${pad(
+    date.getUTCHours()
+  )}:${pad(date.getUTCMinutes())}`;
+}
+
 export function localDateKeyFromDate(date: Date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
@@ -95,5 +105,5 @@ export function appointmentDisplayDateTimeValue(appointment: {
   appointment_datetime: string;
   display_datetime?: string | null;
 }) {
-  return appointment.display_datetime || appointment.appointment_datetime;
+  return appointment.display_datetime || utcClockDateTimeValue(appointment.appointment_datetime);
 }
