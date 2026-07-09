@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { appointmentDateTime } from "@/lib/datetime";
 
 type ReminderType = "one_week_before" | "one_day_before" | "same_day_morning";
 
@@ -57,12 +58,6 @@ const notificationType: Record<ReminderType, string> = {
   one_day_before: "reminder_one_day_before",
   same_day_morning: "reminder_same_day_morning"
 };
-
-const dateFormatter = new Intl.DateTimeFormat("ja-JP", {
-  dateStyle: "medium",
-  timeStyle: "short",
-  timeZone: "Asia/Tokyo"
-});
 
 function adminClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -207,7 +202,7 @@ async function runReminderNotifications(request: Request, options: ReminderRunOp
       continue;
     }
 
-    const dateText = dateFormatter.format(new Date(appointment.appointment_datetime));
+    const dateText = appointmentDateTime(appointment.appointment_datetime);
     const shareUrl = `${appUrl}/share/${appointment.share_token}`;
     const text = [
       reminderTitle[reminder.reminder_type],

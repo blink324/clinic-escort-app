@@ -3,17 +3,9 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppointmentDetail } from "@/components/AppointmentDetail";
+import { appointmentDateTime } from "@/lib/datetime";
 import { getSharedAppointment } from "@/lib/storage";
 import type { AppointmentView } from "@/lib/types";
-
-const dateFormatter = new Intl.DateTimeFormat("ja-JP", {
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-  weekday: "long",
-  hour: "2-digit",
-  minute: "2-digit"
-});
 
 export default function SharePage() {
   const params = useParams<{ token: string }>();
@@ -43,7 +35,7 @@ export default function SharePage() {
     <main className="mobile-shell">
       <section className="share-appointment-hero" aria-label="通院予定">
         <p className="share-patient">{appointment.group.patient_name}さんの通院</p>
-        <time>{dateFormatter.format(new Date(appointment.appointment_datetime))}</time>
+        <time>{appointmentDateTime(appointment.appointment_datetime)}</time>
         <div className="share-primary-info">
           <span>医療機関</span>
           <strong>{appointment.hospital_name}</strong>

@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CompanionForm } from "@/components/CompanionForm";
 import { LineNotificationButton } from "@/components/LineNotificationButton";
 import { calendarFileName, createIcsFile, googleCalendarUrl } from "@/lib/calendar";
-import { toDateTimeLocalValue, toStorageDateTime } from "@/lib/datetime";
+import { appointmentDateTime, toDateTimeLocalValue, toStorageDateTime } from "@/lib/datetime";
 import { notifyCompanionAssigned, notifyCompanionRemoved } from "@/lib/line-notify-client";
 import {
   deleteAppointment,
@@ -25,15 +25,6 @@ type Props = {
   appointment: AppointmentView;
   shared?: boolean;
 };
-
-const dateFormatter = new Intl.DateTimeFormat("ja-JP", {
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-  weekday: "long",
-  hour: "2-digit",
-  minute: "2-digit"
-});
 
 function reminderValues(appointment: AppointmentView) {
   return {
@@ -68,13 +59,13 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
   }, [appointment.share_token]);
   const calendarUrl = useMemo(() => googleCalendarUrl(appointment), [appointment]);
   const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(
-    `${appointment.group.patient_name}さんの通院予定\n${appointment.hospital_name} ${appointment.department}\n${dateFormatter.format(
-      new Date(appointment.appointment_datetime)
+    `${appointment.group.patient_name}さんの通院予定\n${appointment.hospital_name} ${appointment.department}\n${appointmentDateTime(
+      appointment.appointment_datetime
     )}\n付き添い調整: ${shareUrl}`
   )}`;
   const companionNoticeLineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(
-    `${appointment.group.patient_name}さんの通院付き添いが決まりました\n\n${dateFormatter.format(
-      new Date(appointment.appointment_datetime)
+    `${appointment.group.patient_name}さんの通院付き添いが決まりました\n\n${appointmentDateTime(
+      appointment.appointment_datetime
     )}\n${appointment.hospital_name} / ${appointment.department}\n付き添い: ${
       appointment.companion?.display_name || "未定"
     }さん\n\n確認する: ${shareUrl}`
@@ -242,7 +233,7 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
             <strong>{appointment.hospital_name}</strong>
             <span>{appointment.department}</span>
           </div>
-          <p className="large-date">{dateFormatter.format(new Date(appointment.appointment_datetime))}</p>
+          <p className="large-date">{appointmentDateTime(appointment.appointment_datetime)}</p>
           <div className="summary-tags">
             <span>{appointment.companion ? `付き添い: ${appointment.companion.display_name}さん` : "付き添い未定"}</span>
           </div>

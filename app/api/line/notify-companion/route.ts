@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { appointmentDateTime } from "@/lib/datetime";
 
 type AppointmentRecord = {
   appointment_datetime: string;
@@ -28,12 +29,6 @@ type LineConnectionRecord = {
   line_user_id: string;
   user_id: string;
 };
-
-const dateFormatter = new Intl.DateTimeFormat("ja-JP", {
-  dateStyle: "medium",
-  timeStyle: "short",
-  timeZone: "Asia/Tokyo"
-});
 
 function adminClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -146,7 +141,7 @@ export async function POST(request: Request) {
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
   const shareUrl = `${appUrl}/share/${appointment.share_token}`;
-  const dateText = dateFormatter.format(new Date(appointment.appointment_datetime));
+  const dateText = appointmentDateTime(appointment.appointment_datetime);
 
   const activeConnections = connections || [];
   const results = await Promise.allSettled(

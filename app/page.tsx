@@ -6,13 +6,16 @@ import { AuthPanel } from "@/components/AuthPanel";
 import { BottomNav } from "@/components/BottomNav";
 import { LineNotificationButton } from "@/components/LineNotificationButton";
 import { getActiveUser } from "@/lib/auth";
-import { localDateKeyFromDate, localDateKeyFromDateTime } from "@/lib/datetime";
+import {
+  appointmentDate,
+  appointmentTime,
+  localDateKeyFromDate,
+  localDateKeyFromDateTime
+} from "@/lib/datetime";
 import { enabledReminderText } from "@/lib/reminders";
 import { getAppointments, seedDemoData, updateAppointmentStatus } from "@/lib/storage";
 import type { AppointmentStatus, AppointmentView, AuthUser } from "@/lib/types";
 
-const dateFormatter = new Intl.DateTimeFormat("ja-JP", { month: "numeric", day: "numeric", weekday: "short" });
-const timeFormatter = new Intl.DateTimeFormat("ja-JP", { hour: "2-digit", minute: "2-digit" });
 const monthFormatter = new Intl.DateTimeFormat("ja-JP", { year: "numeric", month: "long" });
 const selectedDateFormatter = new Intl.DateTimeFormat("ja-JP", { month: "long", day: "numeric", weekday: "long" });
 const ONBOARDING_SEEN_KEY = "tsukisoi-onboarding-seen";
@@ -250,8 +253,7 @@ export default function HomePage() {
                 <div>
                   <strong>{appointment.group.patient_name}さんの通院</strong>
                   <p>
-                    {dateFormatter.format(new Date(appointment.appointment_datetime))}{" "}
-                    {timeFormatter.format(new Date(appointment.appointment_datetime))}
+                    {appointmentDate(appointment.appointment_datetime)} {appointmentTime(appointment.appointment_datetime)}
                   </p>
                   <p>{appointment.hospital_name} / {appointment.department}</p>
                 </div>
@@ -368,8 +370,8 @@ export default function HomePage() {
                     </div>
                   )}
                   <div className="date-tile">
-                    <span>{dateFormatter.format(new Date(appointment.appointment_datetime))}</span>
-                    <strong>{timeFormatter.format(new Date(appointment.appointment_datetime))}</strong>
+                    <span>{appointmentDate(appointment.appointment_datetime)}</span>
+                    <strong>{appointmentTime(appointment.appointment_datetime)}</strong>
                   </div>
                   <div className="schedule-main">
                     <strong>{appointment.group.patient_name}</strong>
@@ -434,7 +436,7 @@ export default function HomePage() {
                     )}
                   </div>
                 )}
-                <strong>{timeFormatter.format(new Date(appointment.appointment_datetime))}</strong>
+                <strong>{appointmentTime(appointment.appointment_datetime)}</strong>
                 <span>{appointment.group.patient_name}さん / {appointment.hospital_name}</span>
               </Link>
             ))}
@@ -467,8 +469,8 @@ export default function HomePage() {
                   key={appointment.id}
                 >
                   <div className="date-tile">
-                    <span>{dateFormatter.format(new Date(appointment.appointment_datetime))}</span>
-                    <strong>{timeFormatter.format(new Date(appointment.appointment_datetime))}</strong>
+                    <span>{appointmentDate(appointment.appointment_datetime)}</span>
+                    <strong>{appointmentTime(appointment.appointment_datetime)}</strong>
                   </div>
                   <div className="schedule-main">
                     <strong>{appointment.group.patient_name}</strong>
