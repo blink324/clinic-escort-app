@@ -1,6 +1,7 @@
 "use client";
 
 import { reservationBucket, supabase } from "@/lib/supabase";
+import { toStorageDateTime } from "@/lib/datetime";
 import type {
   Appointment,
   AppointmentCompanion,
@@ -641,6 +642,7 @@ export async function getSharedAppointment(token: string): Promise<AppointmentVi
 
 export async function saveAppointment(input: AppointmentInput) {
   if (!supabase) return saveLocalAppointment(input);
+  const appointmentDatetime = toStorageDateTime(input.appointment_datetime);
 
   const { data: appointment, error } = await supabase
     .from("appointments")
@@ -648,7 +650,7 @@ export async function saveAppointment(input: AppointmentInput) {
       group_id: input.group_id,
       hospital_name: input.hospital_name,
       department: input.department,
-      appointment_datetime: input.appointment_datetime,
+      appointment_datetime: appointmentDatetime,
       items_to_bring: input.items_to_bring,
       memo: input.memo,
       reservation_image_url: "",
@@ -675,12 +677,13 @@ export async function saveAppointment(input: AppointmentInput) {
 
 function saveLocalAppointment(input: AppointmentInput) {
   const timestamp = now();
+  const appointmentDatetime = toStorageDateTime(input.appointment_datetime);
   const appointment: Appointment = {
     id: createId("appt"),
     group_id: input.group_id,
     hospital_name: input.hospital_name,
     department: input.department,
-    appointment_datetime: input.appointment_datetime,
+    appointment_datetime: appointmentDatetime,
     items_to_bring: input.items_to_bring,
     memo: input.memo,
     reservation_image_url: input.reservation_image_url,
@@ -712,6 +715,7 @@ export async function updateAppointment(
     reservation_image_url?: string;
   }
 ) {
+  const appointmentDatetime = toStorageDateTime(input.appointment_datetime);
   if (!supabase) {
     const updated = readJson<Appointment[]>(APPOINTMENTS_KEY, []).map((appointment) =>
       appointment.id === id
@@ -719,7 +723,7 @@ export async function updateAppointment(
             ...appointment,
             hospital_name: input.hospital_name,
             department: input.department,
-            appointment_datetime: input.appointment_datetime,
+            appointment_datetime: appointmentDatetime,
             items_to_bring: input.items_to_bring,
             memo: input.memo,
             reservation_image_url:
@@ -729,7 +733,7 @@ export async function updateAppointment(
         : appointment
     );
     writeJson(APPOINTMENTS_KEY, updated);
-    await saveReminderSettings(id, input.appointment_datetime, input.reminders);
+    await saveReminderSettings(id, appointmentDatetime, input.reminders);
     return;
   }
 
@@ -738,7 +742,7 @@ export async function updateAppointment(
     .update({
       hospital_name: input.hospital_name,
       department: input.department,
-      appointment_datetime: input.appointment_datetime,
+      appointment_datetime: appointmentDatetime,
       items_to_bring: input.items_to_bring,
       memo: input.memo
     })
@@ -754,7 +758,7 @@ export async function updateAppointment(
     throwIfError(imageError);
   }
 
-  await saveReminderSettings(id, input.appointment_datetime, input.reminders);
+  await saveReminderSettings(id, appointmentDatetime, input.reminders);
 }
 
 export async function deleteAppointment(id: string) {

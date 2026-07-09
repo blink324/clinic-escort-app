@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CompanionForm } from "@/components/CompanionForm";
 import { LineNotificationButton } from "@/components/LineNotificationButton";
 import { calendarFileName, createIcsFile, googleCalendarUrl } from "@/lib/calendar";
+import { toDateTimeLocalValue, toStorageDateTime } from "@/lib/datetime";
 import { notifyCompanionAssigned, notifyCompanionRemoved } from "@/lib/line-notify-client";
 import {
   deleteAppointment,
@@ -54,7 +55,7 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
   const [editForm, setEditForm] = useState({
     hospital_name: initialAppointment.hospital_name,
     department: initialAppointment.department,
-    appointment_datetime: initialAppointment.appointment_datetime.slice(0, 16),
+    appointment_datetime: toDateTimeLocalValue(initialAppointment.appointment_datetime),
     items_to_bring: initialAppointment.items_to_bring,
     memo: initialAppointment.memo,
     reservation_image_url: initialAppointment.reservation_image_url || "",
@@ -154,11 +155,12 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
     setSavingAppointment(true);
     try {
       await updateAppointment(appointment.id, editForm);
+      const appointmentDatetime = toStorageDateTime(editForm.appointment_datetime);
       setAppointment((current) => ({
         ...current,
         hospital_name: editForm.hospital_name,
         department: editForm.department,
-        appointment_datetime: editForm.appointment_datetime,
+        appointment_datetime: appointmentDatetime,
         items_to_bring: editForm.items_to_bring,
         memo: editForm.memo,
         reservation_image_url: editForm.reservation_image_url || current.reservation_image_url,

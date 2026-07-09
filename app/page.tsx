@@ -6,6 +6,7 @@ import { AuthPanel } from "@/components/AuthPanel";
 import { BottomNav } from "@/components/BottomNav";
 import { LineNotificationButton } from "@/components/LineNotificationButton";
 import { getActiveUser } from "@/lib/auth";
+import { localDateKeyFromDate, localDateKeyFromDateTime } from "@/lib/datetime";
 import { enabledReminderText } from "@/lib/reminders";
 import { getAppointments, seedDemoData, updateAppointmentStatus } from "@/lib/storage";
 import type { AppointmentStatus, AppointmentView, AuthUser } from "@/lib/types";
@@ -15,13 +16,6 @@ const timeFormatter = new Intl.DateTimeFormat("ja-JP", { hour: "2-digit", minute
 const monthFormatter = new Intl.DateTimeFormat("ja-JP", { year: "numeric", month: "long" });
 const selectedDateFormatter = new Intl.DateTimeFormat("ja-JP", { month: "long", day: "numeric", weekday: "long" });
 const ONBOARDING_SEEN_KEY = "tsukisoi-onboarding-seen";
-
-function localDateKey(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
 
 function bucketFor(dateValue: string) {
   const today = new Date();
@@ -50,20 +44,20 @@ function dayStatus(dateValue: string) {
 
 function monthDays(appointments: AppointmentView[]) {
   const current = new Date();
-  const todayKey = localDateKey(current);
+  const todayKey = localDateKeyFromDate(current);
   const first = new Date(current.getFullYear(), current.getMonth(), 1);
   const start = new Date(first);
   start.setDate(first.getDate() - first.getDay());
   return Array.from({ length: 42 }, (_, index) => {
     const date = new Date(start);
     date.setDate(start.getDate() + index);
-    const key = localDateKey(date);
+    const key = localDateKeyFromDate(date);
     return {
       date,
       key,
       inMonth: date.getMonth() === current.getMonth(),
       isToday: key === todayKey,
-      count: appointments.filter((appointment) => appointment.appointment_datetime.slice(0, 10) === key).length
+      count: appointments.filter((appointment) => localDateKeyFromDateTime(appointment.appointment_datetime) === key).length
     };
   });
 }
@@ -87,7 +81,7 @@ export default function HomePage() {
     status: AppointmentStatus;
   } | null>(null);
   const [mode, setMode] = useState<"list" | "calendar">("list");
-  const [selectedDate, setSelectedDate] = useState(localDateKey(new Date()));
+  const [selectedDate, setSelectedDate] = useState(localDateKeyFromDate(new Date()));
   const [loading, setLoading] = useState(true);
   const [showPendingOnly, setShowPendingOnly] = useState(false);
   const [showPastHistory, setShowPastHistory] = useState(false);
@@ -153,7 +147,7 @@ export default function HomePage() {
     : futureAppointments;
   const calendarDays = useMemo(() => monthDays(calendarAppointments), [calendarAppointments]);
   const selectedAppointments = futureAppointments.filter(
-    (appointment) => appointment.appointment_datetime.slice(0, 10) === selectedDate
+    (appointment) => localDateKeyFromDateTime(appointment.appointment_datetime) === selectedDate
   );
   const shouldShowOnboarding = !hasAnyAppointments && showOnboarding;
 
