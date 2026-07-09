@@ -717,9 +717,10 @@ export async function updateAppointment(
 ) {
   const appointmentDatetime = toStorageDateTime(input.appointment_datetime);
   if (!supabase) {
+    let nextAppointment: Appointment | undefined;
     const updated = readJson<Appointment[]>(APPOINTMENTS_KEY, []).map((appointment) =>
       appointment.id === id
-        ? {
+        ? (nextAppointment = {
             ...appointment,
             hospital_name: input.hospital_name,
             department: input.department,
@@ -729,15 +730,15 @@ export async function updateAppointment(
             reservation_image_url:
               input.reservation_image_url === undefined ? appointment.reservation_image_url : input.reservation_image_url,
             updated_at: now()
-          }
+          })
         : appointment
     );
     writeJson(APPOINTMENTS_KEY, updated);
     await saveReminderSettings(id, appointmentDatetime, input.reminders);
-    return;
+    return nextAppointment;
   }
 
-  const { error } = await supabase
+  const { data: updatedAppointment, error } = await supabase
     .from("appointments")
     .update({
       hospital_name: input.hospital_name,
@@ -746,19 +747,26 @@ export async function updateAppointment(
       items_to_bring: input.items_to_bring,
       memo: input.memo
     })
-    .eq("id", id);
+    .eq("id", id)
+    .select("*")
+    .single<Appointment>();
   throwIfError(error);
 
+  let nextAppointment = updatedAppointment;
   if (input.reservation_image_url !== undefined) {
     const imagePath = await uploadReservationImage(id, input.reservation_image_url);
-    const { error: imageError } = await supabase
+    const { data: imageUpdatedAppointment, error: imageError } = await supabase
       .from("appointments")
       .update({ reservation_image_url: imagePath })
-      .eq("id", id);
+      .eq("id", id)
+      .select("*")
+      .single<Appointment>();
     throwIfError(imageError);
+    nextAppointment = imageUpdatedAppointment;
   }
 
   await saveReminderSettings(id, appointmentDatetime, input.reminders);
+  return nextAppointment;
 }
 
 export async function deleteAppointment(id: string) {

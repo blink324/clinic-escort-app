@@ -145,20 +145,28 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
     event.preventDefault();
     setSavingAppointment(true);
     try {
-      await updateAppointment(appointment.id, editForm);
+      const updatedAppointment = await updateAppointment(appointment.id, editForm);
       const appointmentDatetime = toStorageDateTime(editForm.appointment_datetime);
+      const nextAppointmentDatetime = updatedAppointment?.appointment_datetime || appointmentDatetime;
       setAppointment((current) => ({
         ...current,
         hospital_name: editForm.hospital_name,
         department: editForm.department,
-        appointment_datetime: appointmentDatetime,
+        appointment_datetime: nextAppointmentDatetime,
         items_to_bring: editForm.items_to_bring,
         memo: editForm.memo,
-        reservation_image_url: editForm.reservation_image_url || current.reservation_image_url,
+        reservation_image_url:
+          editForm.reservation_image_url || updatedAppointment?.reservation_image_url || current.reservation_image_url,
         reminders: current.reminders.map((reminder) => ({
           ...reminder,
           enabled: editForm.reminders[reminder.reminder_type]
         }))
+      }));
+      setEditForm((current) => ({
+        ...current,
+        appointment_datetime: toDateTimeLocalValue(nextAppointmentDatetime),
+        reservation_image_url:
+          current.reservation_image_url || updatedAppointment?.reservation_image_url || appointment.reservation_image_url || ""
       }));
       setEditingAppointment(false);
     } finally {
