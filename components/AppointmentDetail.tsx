@@ -10,6 +10,7 @@ import { calendarFileName, createIcsFile, googleCalendarUrl } from "@/lib/calend
 import {
   appointmentDateTime,
   appointmentDisplayDateTimeValue,
+  normalizeDisplayDateTime,
   toDateTimeLocalValue,
   toStorageDateTime
 } from "@/lib/datetime";
@@ -52,7 +53,7 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
     hospital_name: initialAppointment.hospital_name,
     department: initialAppointment.department,
     appointment_datetime: toDateTimeLocalValue(initialAppointment.appointment_datetime),
-    display_datetime: toDateTimeLocalValue(appointmentDisplayDateTimeValue(initialAppointment)),
+    display_datetime: normalizeDisplayDateTime(initialAppointment.appointment_datetime, initialAppointment.display_datetime),
     items_to_bring: initialAppointment.items_to_bring,
     memo: initialAppointment.memo,
     reservation_image_url: initialAppointment.reservation_image_url || "",
@@ -141,6 +142,10 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
     setEditForm((current) => ({ ...current, [key]: value }));
   }
 
+  function updateAppointmentDateTime(value: string) {
+    setEditForm((current) => ({ ...current, appointment_datetime: value, display_datetime: value }));
+  }
+
   function updateReservationImage(file?: File) {
     if (!file) return;
     const reader = new FileReader();
@@ -161,7 +166,8 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
         department: editForm.department,
         appointment_datetime: nextAppointmentDatetime,
         display_datetime:
-          updatedAppointment?.display_datetime || editForm.display_datetime || toDateTimeLocalValue(nextAppointmentDatetime),
+          updatedAppointment?.display_datetime ||
+          normalizeDisplayDateTime(nextAppointmentDatetime, editForm.display_datetime || nextAppointmentDatetime),
         items_to_bring: editForm.items_to_bring,
         memo: editForm.memo,
         reservation_image_url:
@@ -175,7 +181,8 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
         ...current,
         appointment_datetime: toDateTimeLocalValue(nextAppointmentDatetime),
         display_datetime:
-          updatedAppointment?.display_datetime || current.display_datetime || toDateTimeLocalValue(nextAppointmentDatetime),
+          updatedAppointment?.display_datetime ||
+          normalizeDisplayDateTime(nextAppointmentDatetime, current.display_datetime || nextAppointmentDatetime),
         reservation_image_url:
           current.reservation_image_url || updatedAppointment?.reservation_image_url || appointment.reservation_image_url || ""
       }));
@@ -205,7 +212,7 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
         hospital_name: appointment.hospital_name,
         department: appointment.department,
         appointment_datetime: appointment.appointment_datetime,
-        display_datetime: appointment.display_datetime || toDateTimeLocalValue(appointment.appointment_datetime),
+        display_datetime: normalizeDisplayDateTime(appointment.appointment_datetime, appointment.display_datetime),
         items_to_bring: appointment.items_to_bring,
         memo: appointment.memo,
         reminders: nextReminders
@@ -403,7 +410,7 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
                   required
                   type="datetime-local"
                   value={editForm.appointment_datetime}
-                  onChange={(event) => updateEditForm("appointment_datetime", event.target.value)}
+                  onChange={(event) => updateAppointmentDateTime(event.target.value)}
                 />
               </label>
               <label>

@@ -1,7 +1,7 @@
 "use client";
 
 import { reservationBucket, supabase } from "@/lib/supabase";
-import { toDateTimeLocalValue, toStorageDateTime } from "@/lib/datetime";
+import { normalizeDisplayDateTime, toStorageDateTime } from "@/lib/datetime";
 import type {
   Appointment,
   AppointmentCompanion,
@@ -643,7 +643,7 @@ export async function getSharedAppointment(token: string): Promise<AppointmentVi
 export async function saveAppointment(input: AppointmentInput) {
   if (!supabase) return saveLocalAppointment(input);
   const appointmentDatetime = toStorageDateTime(input.appointment_datetime);
-  const displayDatetime = toDateTimeLocalValue(input.display_datetime || input.appointment_datetime);
+  const displayDatetime = normalizeDisplayDateTime(appointmentDatetime, input.display_datetime || input.appointment_datetime);
 
   const { data: appointment, error } = await supabase
     .from("appointments")
@@ -680,7 +680,7 @@ export async function saveAppointment(input: AppointmentInput) {
 function saveLocalAppointment(input: AppointmentInput) {
   const timestamp = now();
   const appointmentDatetime = toStorageDateTime(input.appointment_datetime);
-  const displayDatetime = toDateTimeLocalValue(input.display_datetime || input.appointment_datetime);
+  const displayDatetime = normalizeDisplayDateTime(appointmentDatetime, input.display_datetime || input.appointment_datetime);
   const appointment: Appointment = {
     id: createId("appt"),
     group_id: input.group_id,
@@ -721,7 +721,7 @@ export async function updateAppointment(
   }
 ) {
   const appointmentDatetime = toStorageDateTime(input.appointment_datetime);
-  const displayDatetime = toDateTimeLocalValue(input.display_datetime || input.appointment_datetime);
+  const displayDatetime = normalizeDisplayDateTime(appointmentDatetime, input.display_datetime || input.appointment_datetime);
   if (!supabase) {
     let nextAppointment: Appointment | undefined;
     const updated = readJson<Appointment[]>(APPOINTMENTS_KEY, []).map((appointment) =>

@@ -47,6 +47,19 @@ function utcClockDateTimeValue(value: string) {
   )}:${pad(date.getUTCMinutes())}`;
 }
 
+function localDateTimeMinutes(value: string) {
+  const parts = parseDateTimeLocalValue(value);
+  if (!parts) return null;
+  return Math.floor(Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute) / (1000 * 60));
+}
+
+function isNineHourDisplayShift(displayValue: string, expectedValue: string) {
+  const displayMinutes = localDateTimeMinutes(displayValue);
+  const expectedMinutes = localDateTimeMinutes(expectedValue);
+  if (displayMinutes === null || expectedMinutes === null) return false;
+  return displayMinutes - expectedMinutes === 9 * 60;
+}
+
 export function localDateKeyFromDate(date: Date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
@@ -101,9 +114,17 @@ export function appointmentDateTime(value: string) {
   return `${parts.year}年${parts.month}月${parts.day}日${weekday}曜日 ${pad(parts.hour)}:${pad(parts.minute)}`;
 }
 
+export function normalizeDisplayDateTime(appointmentDateTimeValue: string, displayDateTimeValue?: string | null) {
+  const expectedValue = toDateTimeLocalValue(appointmentDateTimeValue);
+  const displayValue = displayDateTimeValue ? toDateTimeLocalValue(displayDateTimeValue) : "";
+  if (!displayValue) return expectedValue || utcClockDateTimeValue(appointmentDateTimeValue);
+  if (isNineHourDisplayShift(displayValue, expectedValue)) return expectedValue;
+  return displayValue;
+}
+
 export function appointmentDisplayDateTimeValue(appointment: {
   appointment_datetime: string;
   display_datetime?: string | null;
 }) {
-  return appointment.display_datetime || utcClockDateTimeValue(appointment.appointment_datetime);
+  return normalizeDisplayDateTime(appointment.appointment_datetime, appointment.display_datetime);
 }
