@@ -81,6 +81,11 @@ function statusText(status: AppointmentStatus) {
 export default function HomePage() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [appointments, setAppointments] = useState<AppointmentView[]>([]);
+  const [recentAfterVisit, setRecentAfterVisit] = useState<{
+    groupId: string;
+    patientName: string;
+    status: AppointmentStatus;
+  } | null>(null);
   const [mode, setMode] = useState<"list" | "calendar">("list");
   const [selectedDate, setSelectedDate] = useState(localDateKey(new Date()));
   const [loading, setLoading] = useState(true);
@@ -158,10 +163,18 @@ export default function HomePage() {
   }
 
   async function setAppointmentStatus(appointmentId: string, status: AppointmentStatus) {
+    const target = appointments.find((appointment) => appointment.id === appointmentId);
     await updateAppointmentStatus(appointmentId, status);
     setAppointments((current) =>
       current.map((appointment) => (appointment.id === appointmentId ? { ...appointment, status } : appointment))
     );
+    if (target) {
+      setRecentAfterVisit({
+        groupId: target.group_id,
+        patientName: target.group.patient_name,
+        status
+      });
+    }
   }
 
   if (!user) return <AuthPanel onSignedIn={() => void refresh()} />;
@@ -205,6 +218,28 @@ export default function HomePage() {
           通院予定を登録する
         </Link>
       </div>
+
+      {recentAfterVisit && (
+        <section className="after-visit-done-panel" aria-label="受診後の記録完了">
+          <div>
+            <strong>
+              {recentAfterVisit.patientName}さんの通院を
+              {recentAfterVisit.status === "completed" ? "受診完了" : "未受診"}で記録しました
+            </strong>
+            <p>
+              次回予約票をもらっている場合は、このまま次の予定を登録できます。
+            </p>
+          </div>
+          <div className="after-visit-done-actions">
+            <Link className="primary-action" href={`/appointments/new?group=${recentAfterVisit.groupId}`}>
+              次の予定を登録
+            </Link>
+            <button className="secondary-action" onClick={() => setRecentAfterVisit(null)} type="button">
+              閉じる
+            </button>
+          </div>
+        </section>
+      )}
 
       {unconfirmedPastAppointments.length > 0 && (
         <section className="after-visit-panel" aria-label="受診後の確認">
@@ -466,13 +501,22 @@ export default function HomePage() {
                         </button>
                       </div>
                     ) : (
-                      <Link
-                        className="text-button history-detail-link"
-                        href={`/appointments/${appointment.id}`}
-                        onClick={() => setShowPastHistory(false)}
-                      >
-                        詳細を見る
-                      </Link>
+                      <div className="history-follow-actions">
+                        <Link
+                          className="secondary-action"
+                          href={`/appointments/${appointment.id}`}
+                          onClick={() => setShowPastHistory(false)}
+                        >
+                          詳細を見る
+                        </Link>
+                        <Link
+                          className="primary-action"
+                          href={`/appointments/new?group=${appointment.group_id}`}
+                          onClick={() => setShowPastHistory(false)}
+                        >
+                          {appointment.status === "completed" ? "次の予定を登録" : "再予約を登録"}
+                        </Link>
+                      </div>
                     )}
                   </div>
                 </article>

@@ -483,6 +483,38 @@ button { cursor: pointer; }
   padding: 16px;
 }
 
+.after-visit-done-panel {
+  background: #f1f8f4;
+  border: 1px solid #bddcc8;
+  border-radius: 8px;
+  box-shadow: 0 14px 34px rgba(32, 92, 58, 0.1);
+  display: grid;
+  gap: 12px;
+  margin: 14px 0;
+  padding: 16px;
+}
+
+.after-visit-done-panel strong {
+  color: #205c3a;
+  display: block;
+  font-size: 1.08rem;
+  line-height: 1.45;
+}
+
+.after-visit-done-panel p {
+  color: #4f6759;
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1.5;
+  margin: 6px 0 0;
+}
+
+.after-visit-done-actions {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr 1fr;
+}
+
 .after-visit-heading {
   align-items: flex-start;
   display: flex;
@@ -533,7 +565,8 @@ button { cursor: pointer; }
 }
 
 .after-visit-actions,
-.history-status-actions {
+.history-status-actions,
+.history-follow-actions {
   display: grid;
   gap: 8px;
   grid-template-columns: 1fr 1fr;
@@ -550,8 +583,14 @@ button { cursor: pointer; }
   margin-top: 10px;
 }
 
+.history-follow-actions {
+  margin-top: 10px;
+}
+
 .history-status-actions .primary-action,
-.history-status-actions .secondary-action {
+.history-status-actions .secondary-action,
+.history-follow-actions .primary-action,
+.history-follow-actions .secondary-action {
   min-height: 44px;
   padding: 10px 12px;
 }
