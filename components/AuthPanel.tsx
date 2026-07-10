@@ -49,13 +49,28 @@ export function AuthPanel({ onSignedIn }: Props) {
   if (!showForm) {
     return (
       <section className="brand-screen">
-        <div className="brand-glow" />
-        <div className="brand-hero">
-          <p className="brand-kicker">家族の通院付き添いを、ひとつに。</p>
-          <h1>つきそい</h1>
-          <p>
-            親や高齢家族の通院予定を共有し、誰が付き添うかを家族で決められるアプリです。
-          </p>
+        <header className="brand-nav">
+          <Link href="/about">つきそい</Link>
+          <button
+            onClick={() => {
+              setMode("login");
+              setShowForm(true);
+            }}
+            type="button"
+          >
+            ログイン
+          </button>
+        </header>
+
+        <div className="brand-hero" id="top">
+          <img className="brand-hero-image" src="/home-icon.png" alt="" aria-hidden="true" />
+          <div className="brand-hero-copy">
+            <p className="brand-kicker">家族の通院を、いっしょに。</p>
+            <h1>つきそい</h1>
+            <p>
+              親や高齢家族の通院予定を共有し、誰が付き添うかを家族で決められるアプリです。
+            </p>
+          </div>
           <div className="brand-actions">
             <button
               className="primary-action full"
@@ -76,6 +91,57 @@ export function AuthPanel({ onSignedIn }: Props) {
               ログイン
             </button>
           </div>
+          <div className="brand-proof">
+            <span>LINE共有</span>
+            <span>付き添い担当</span>
+            <span>リマインド</span>
+          </div>
+        </div>
+
+        <div className="lp-content">
+          <section className="lp-section">
+            <p className="eyebrow">できること</p>
+            <h2>通院予定と付き添いを家族で見える化</h2>
+            <div className="lp-feature-grid">
+              <div>
+                <strong>誰の予定かすぐ分かる</strong>
+                <p>患者ごとのアイコンと共有先で、母・父・祖母など複数人でも見分けやすくします。</p>
+              </div>
+              <div>
+                <strong>付き添い未定に気づける</strong>
+                <p>予定一覧で付き添いが決まっていない予定を分かりやすく表示します。</p>
+              </div>
+              <div>
+                <strong>LINEで家族に共有</strong>
+                <p>予定ページをLINEで送り、家族がその場で付き添い担当になれます。</p>
+              </div>
+              <div>
+                <strong>通院前にリマインド</strong>
+                <p>前日・当日朝のLINE通知で、受診忘れや付き添い忘れを防ぎます。</p>
+              </div>
+            </div>
+          </section>
+
+          <section className="lp-section">
+            <p className="eyebrow">使い方</p>
+            <h2>予約票をもらったら、予定を入れて家族に送るだけ</h2>
+            <ol className="lp-flow">
+              <li><span>1</span><strong>通院予定を登録</strong><p>病院名、診療科、日時、持ち物、予約票写真を残せます。</p></li>
+              <li><span>2</span><strong>LINEで共有</strong><p>家族LINEに送ると、ログインしていない家族も予定を確認できます。</p></li>
+              <li><span>3</span><strong>付き添いを決める</strong><p>誰かが「私が付き添う」を押すと、担当者が予定に表示されます。</p></li>
+              <li><span>4</span><strong>受診後に記録</strong><p>受診完了・未受診を記録し、次の予定登録につなげられます。</p></li>
+            </ol>
+          </section>
+
+          <section className="lp-section lp-install">
+            <div>
+              <p className="eyebrow">スマホで使いやすく</p>
+              <h2>ホーム画面に追加して、アプリのように開けます</h2>
+              <p>App Storeを使わず、公開URLからそのまま使い始められます。</p>
+            </div>
+            <Link className="secondary-action full" href="/install">スマホに追加する方法</Link>
+          </section>
+
           <p className="legal-inline dark">
             <Link href="/about">どんなアプリ？</Link>・<Link href="/install">スマホに追加</Link>・<Link href="/help">ヘルプ</Link>・<Link href="/terms">利用規約</Link>・<Link href="/privacy">プライバシーポリシー</Link>
           </p>

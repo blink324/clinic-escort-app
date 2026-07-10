@@ -140,67 +140,100 @@ button { cursor: pointer; }
 }
 
 .brand-screen {
-  background:
-    radial-gradient(circle at 22% 18%, rgba(255, 219, 168, 0.58), transparent 30%),
-    radial-gradient(circle at 86% 20%, rgba(210, 231, 219, 0.72), transparent 28%),
-    linear-gradient(145deg, #fffaf0 0%, #f4f8f4 50%, #eef4ff 100%);
+  background: #f8fbf7;
   color: var(--text);
   display: grid;
-  min-height: 100vh;
-  overflow: hidden;
-  padding: 22px 16px;
-  place-items: center;
+  gap: 24px;
+  min-height: 100svh;
+  overflow: hidden auto;
+  padding: 14px 16px 26px;
   position: relative;
 }
 
-.brand-screen::after {
-  background:
-    linear-gradient(90deg, rgba(37, 99, 235, 0.08) 0 1px, transparent 1px 100%),
-    linear-gradient(rgba(37, 99, 235, 0.05) 0 1px, transparent 1px 100%);
-  background-size: 64px 64px;
-  content: "";
-  inset: 0;
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent 72%);
-  opacity: 0.28;
-  position: absolute;
+.brand-nav {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin: 0 auto;
+  max-width: 920px;
+  position: relative;
+  width: 100%;
+  z-index: 2;
 }
 
-.brand-glow {
-  background: linear-gradient(135deg, rgba(255, 183, 77, 0.72), rgba(111, 191, 166, 0.54));
+.brand-nav a {
+  color: #0f6d45;
+  font-size: 1.12rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.brand-nav button {
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(94, 129, 112, 0.24);
   border-radius: 999px;
-  filter: blur(20px);
-  height: 190px;
-  opacity: 0.5;
-  position: absolute;
-  right: -70px;
-  top: 18%;
-  width: 180px;
+  color: var(--text);
+  font-weight: 900;
+  min-height: 42px;
+  padding: 8px 16px;
 }
 
 .brand-hero {
+  align-content: end;
+  border-radius: 8px;
   display: grid;
   gap: 18px;
-  max-width: 520px;
+  margin: 0 auto;
+  max-width: 920px;
+  min-height: calc(100svh - 126px);
+  overflow: hidden;
+  padding: min(11vh, 78px) 0 22px;
   position: relative;
   width: 100%;
   z-index: 1;
 }
 
+.brand-hero::after {
+  background: linear-gradient(180deg, rgba(248, 251, 247, 0.1), rgba(248, 251, 247, 0.94) 70%);
+  content: "";
+  inset: 0;
+  position: absolute;
+  z-index: -1;
+}
+
+.brand-hero-image {
+  height: min(62vh, 620px);
+  object-fit: contain;
+  opacity: 0.38;
+  position: absolute;
+  right: 50%;
+  top: 2%;
+  transform: translateX(50%);
+  width: min(92vw, 760px);
+  z-index: -2;
+}
+
+.brand-hero-copy {
+  display: grid;
+  gap: 14px;
+  max-width: 620px;
+}
+
 .brand-kicker {
-  color: #6f7f75;
+  color: #0f6d45;
   font-weight: 900;
   margin: 0;
 }
 
 .brand-hero h1 {
-  font-size: clamp(4.1rem, 22vw, 7rem);
+  color: #153325;
+  font-size: clamp(4.2rem, 21vw, 7.8rem);
   line-height: 0.92;
   margin: 0;
-  color: #203429;
 }
 
 .brand-hero p {
-  color: #657386;
+  color: #435468;
   font-size: 1.08rem;
   line-height: 1.85;
   margin: 0;
@@ -210,6 +243,101 @@ button { cursor: pointer; }
   display: grid;
   gap: 12px;
   margin-top: 8px;
+  max-width: 520px;
+}
+
+.brand-proof {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 520px;
+}
+
+.brand-proof span {
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(94, 129, 112, 0.24);
+  border-radius: 999px;
+  color: #355345;
+  font-size: 0.82rem;
+  font-weight: 900;
+  padding: 8px 11px;
+}
+
+.lp-content {
+  display: grid;
+  gap: 14px;
+  margin: 0 auto;
+  max-width: 920px;
+  width: 100%;
+}
+
+.lp-section {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(94, 129, 112, 0.18);
+  border-radius: 8px;
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+.lp-section h2 {
+  font-size: 1.45rem;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.lp-section p {
+  color: var(--muted);
+  line-height: 1.7;
+  margin: 0;
+}
+
+.lp-feature-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.lp-feature-grid div,
+.lp-flow li {
+  background: #f4f8f6;
+  border: 1px solid rgba(94, 129, 112, 0.16);
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+}
+
+.lp-feature-grid strong,
+.lp-flow strong {
+  color: var(--text);
+  font-size: 1.02rem;
+}
+
+.lp-flow {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lp-flow span {
+  background: #dff2e8;
+  border-radius: 999px;
+  color: #0f6d45;
+  display: grid;
+  font-weight: 900;
+  height: 32px;
+  place-items: center;
+  width: 32px;
+}
+
+.lp-install {
+  align-items: center;
+}
+
+.lp-install .secondary-action {
+  background: #f4f8f6;
 }
 
 .secondary-action.dark {
@@ -1592,6 +1720,11 @@ textarea { line-height: 1.6; resize: vertical; }
   color: rgba(255, 255, 255, 0.86);
 }
 
+.brand-screen .legal-inline.dark,
+.brand-screen .legal-inline.dark a {
+  color: #587064;
+}
+
 .legal-inline a {
   color: var(--primary);
   font-weight: 900;
@@ -1848,6 +1981,15 @@ textarea { line-height: 1.6; resize: vertical; }
 
 @media (min-width: 760px) {
   .mobile-shell { padding-top: 28px; }
+  .brand-actions { grid-template-columns: 1fr 1fr; }
+  .brand-hero-image {
+    opacity: 0.5;
+    right: 4%;
+    transform: none;
+    width: min(50vw, 560px);
+  }
+  .lp-feature-grid { grid-template-columns: 1fr 1fr; }
+  .lp-install { grid-template-columns: 1fr 260px; }
   .info-grid { grid-template-columns: 1fr 1fr; }
   .modal-backdrop { align-items: center; }
 }
