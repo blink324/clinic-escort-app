@@ -866,7 +866,7 @@ button { cursor: pointer; }
 
 .schedule-card .patient-avatar.small > span,
 .after-visit-card .patient-avatar.small > span {
-  transform: translate(-56%, -53%);
+  transform: translate(-50%, -53%);
 }
 
 .patient-avatar.tiny {
@@ -876,7 +876,7 @@ button { cursor: pointer; }
 }
 
 .calendar-schedule .patient-avatar.tiny > span {
-  transform: translate(-54%, -53%);
+  transform: translate(-50%, -53%);
 }
 
 .patient-name-line {
