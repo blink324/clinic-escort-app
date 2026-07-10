@@ -13,7 +13,7 @@ export default function ContactPage() {
           メールが届かない、LINE連携ができない、データ削除をしたい、使い方が分からない場合は、下記メールアドレスへご連絡ください。
         </p>
         <a className="primary-action full" href={`mailto:${supportEmail}?subject=つきそいへの問い合わせ`}>
-          メールで問い合わせる
+          お問い合わせはこちらから
         </a>
         <Link className="secondary-action full" href="/help">
           よくある困りごとを見る

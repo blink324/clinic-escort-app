@@ -46,7 +46,7 @@ export default function AboutPage() {
         </p>
         <div className="profile-link-list">
           <Link href="/privacy">プライバシーポリシー</Link>
-          <Link href="/contact">お問い合わせ</Link>
+          <Link href="/help">お問い合わせはこちらから</Link>
         </div>
       </section>
     </main>

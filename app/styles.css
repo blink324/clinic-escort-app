@@ -1022,10 +1022,93 @@ textarea { line-height: 1.6; resize: vertical; }
   margin: 0;
 }
 
+.profile-main-panel h2 {
+  font-size: 1.45rem;
+}
+
+.profile-accordion {
+  padding: 0;
+}
+
+.profile-accordion summary {
+  align-items: center;
+  cursor: pointer;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  list-style: none;
+  padding: 18px;
+}
+
+.profile-accordion summary::-webkit-details-marker {
+  display: none;
+}
+
+.profile-accordion summary::after {
+  background: #eef4ff;
+  border-radius: 999px;
+  color: var(--primary);
+  content: "+";
+  font-weight: 900;
+  height: 28px;
+  line-height: 28px;
+  text-align: center;
+  width: 28px;
+}
+
+.profile-accordion[open] summary::after {
+  content: "-";
+}
+
+.profile-accordion summary span {
+  color: var(--text);
+  font-size: 1.08rem;
+  font-weight: 900;
+}
+
+.profile-accordion summary strong {
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.profile-accordion > :not(summary) {
+  margin-left: 18px;
+  margin-right: 18px;
+}
+
+.profile-accordion > :last-child {
+  margin-bottom: 18px;
+}
+
 .profile-panel p {
   color: var(--muted);
   line-height: 1.6;
   margin: 0;
+}
+
+.profile-panel .compact-form {
+  gap: 10px;
+}
+
+.profile-panel .compact-form label {
+  align-items: center;
+  background: #f4f7fb;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(96px, 1fr) minmax(118px, 148px);
+  padding: 12px;
+}
+
+.profile-panel .compact-form input[type="time"] {
+  background: var(--surface);
+  min-height: 46px;
+  padding: 8px 10px;
+  text-align: center;
 }
 
 .profile-panel.danger-zone {
@@ -1098,9 +1181,9 @@ textarea { line-height: 1.6; resize: vertical; }
 
 .notification-history-card div {
   align-items: flex-start;
-  display: flex;
+  display: grid;
   gap: 10px;
-  justify-content: space-between;
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 
 .notification-history-card strong {
@@ -1110,13 +1193,26 @@ textarea { line-height: 1.6; resize: vertical; }
 
 .notification-history-card span {
   color: var(--muted);
-  flex-shrink: 0;
   font-size: 0.82rem;
   font-weight: 800;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .notification-history-card p {
   font-size: 0.92rem;
+}
+
+@media (max-width: 420px) {
+  .profile-panel .compact-form label,
+  .notification-history-card div {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-panel .compact-form input[type="time"],
+  .notification-history-card span {
+    text-align: left;
+  }
 }
 
 .escort-box {

@@ -262,7 +262,7 @@ export default function MyPage() {
         <Link className="text-button" href="/">予定へ戻る</Link>
       </header>
 
-      <section className="profile-panel">
+      <section className="profile-panel profile-main-panel">
         <h2>名前</h2>
         <p>ここで設定した名前が、メンバー表示・付き添い担当・LINE連携名に反映されます。</p>
         <form className="inline-form compact-form" onSubmit={(event) => void saveName(event)}>
@@ -277,8 +277,11 @@ export default function MyPage() {
         </form>
       </section>
 
-      <section className="profile-panel">
-        <h2>LINE連携</h2>
+      <details className="profile-panel profile-accordion">
+        <summary>
+          <span>LINE連携</span>
+          <strong>{lineConnection?.notifications_enabled ? "通知を受け取る" : lineConnection ? "停止中" : "未連携"}</strong>
+        </summary>
         <div className="profile-status-list">
           <div>
             <span>連携状態</span>
@@ -310,10 +313,13 @@ export default function MyPage() {
         <p className="help-text">
           通知が届かない場合は、つきそい公式LINEを友だち追加しているか確認してください。
         </p>
-      </section>
+      </details>
 
-      <section className="profile-panel">
-        <h2>リマインド通知テスト</h2>
+      <details className="profile-panel profile-accordion">
+        <summary>
+          <span>リマインド通知テスト</span>
+          <strong>手動確認</strong>
+        </summary>
         <p>前日・当日朝など、今送信対象になっているリマインドを自分宛に確認します。</p>
         <button
           className="secondary-action full"
@@ -328,10 +334,13 @@ export default function MyPage() {
             {reminderCheckMessage}
           </p>
         )}
-      </section>
+      </details>
 
-      <section className="profile-panel">
-        <h2>リマインド時刻</h2>
+      <details className="profile-panel profile-accordion">
+        <summary>
+          <span>リマインド時刻</span>
+          <strong>前日 {reminderTimes.one_day_before} / 当日 {reminderTimes.same_day_morning}</strong>
+        </summary>
         <p>これから登録・編集する予定の前日通知と当日朝通知の時刻に使います。</p>
         <form className="inline-form compact-form" onSubmit={(event) => void saveReminderTimes(event)}>
           <label>
@@ -361,10 +370,13 @@ export default function MyPage() {
             {savingReminderTimes ? "保存中..." : "通知時刻を保存"}
           </button>
         </form>
-      </section>
+      </details>
 
-      <section className="profile-panel">
-        <h2>最近のLINE通知</h2>
+      <details className="profile-panel profile-accordion">
+        <summary>
+          <span>最近のLINE通知</span>
+          <strong>{notificationHistory.length}件</strong>
+        </summary>
         {notificationHistory.length === 0 ? (
           <p>まだ通知履歴はありません。リマインドや付き添い通知を送るとここへ表示されます。</p>
         ) : (
@@ -384,17 +396,19 @@ export default function MyPage() {
             ))}
           </div>
         )}
-      </section>
+      </details>
 
-      <section className="profile-panel">
-        <h2>サポート</h2>
+      <details className="profile-panel profile-accordion">
+        <summary>
+          <span>ヘルプ・規約</span>
+          <strong>確認する</strong>
+        </summary>
         <div className="profile-link-list">
           <Link href="/help">ヘルプ</Link>
-          <Link href="/contact">お問い合わせ</Link>
           <Link href="/terms">利用規約</Link>
           <Link href="/privacy">プライバシーポリシー</Link>
         </div>
-      </section>
+      </details>
 
       <section className="profile-panel danger-zone">
         <h2>退会・データ削除</h2>

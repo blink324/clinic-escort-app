@@ -59,7 +59,7 @@ export default function HelpPage() {
         </div>
 
         <a className="primary-action full" href={`mailto:${supportEmail}?subject=つきそいへの問い合わせ`}>
-          解決しないので問い合わせる
+          お問い合わせはこちらから
         </a>
         <p className="muted">連絡先：{supportEmail}</p>
       </section>

@@ -45,8 +45,39 @@ export async function POST(request: Request) {
 
   const ownedGroupIds = (ownedGroups || []).map((group) => group.id);
 
+  if (ownedGroupIds.length > 0) {
+    const { data: ownedAppointments, error: appointmentReadError } = await supabase
+      .from("appointments")
+      .select("id")
+      .in("group_id", ownedGroupIds);
+    if (appointmentReadError) {
+      return NextResponse.json({ error: "削除対象の予定を確認できませんでした。" }, { status: 500 });
+    }
+
+    const ownedAppointmentIds = (ownedAppointments || []).map((appointment) => appointment.id);
+    if (ownedAppointmentIds.length > 0) {
+      const appointmentCleanupResults = await Promise.allSettled([
+        supabase.from("notification_logs").delete().in("appointment_id", ownedAppointmentIds),
+        supabase.from("reminder_settings").delete().in("appointment_id", ownedAppointmentIds),
+        supabase.from("appointment_companions").delete().in("appointment_id", ownedAppointmentIds)
+      ]);
+      const appointmentCleanupError = appointmentCleanupResults.find(
+        (result) => result.status === "fulfilled" && result.value.error
+      ) as PromiseFulfilledResult<{ error: { message: string } | null }> | undefined;
+      if (appointmentCleanupResults.some((result) => result.status === "rejected") || appointmentCleanupError?.value.error) {
+        return NextResponse.json({ error: "予定に紐づくデータを削除できませんでした。" }, { status: 500 });
+      }
+
+      const { error: appointmentDeleteError } = await supabase.from("appointments").delete().in("id", ownedAppointmentIds);
+      if (appointmentDeleteError) {
+        return NextResponse.json({ error: "作成した予定を削除できませんでした。" }, { status: 500 });
+      }
+    }
+  }
+
   const cleanupResults = await Promise.allSettled([
     supabase.from("notification_logs").delete().eq("recipient_user_id", userId),
+    supabase.from("user_preferences").delete().eq("user_id", userId),
     supabase.from("line_connections").delete().eq("user_id", userId),
     supabase.from("appointment_companions").delete().eq("user_id", userId),
     supabase.from("group_members").delete().eq("user_id", userId)
@@ -64,6 +95,11 @@ export async function POST(request: Request) {
   }
 
   if (ownedGroupIds.length > 0) {
+    const { error: ownedMemberDeleteError } = await supabase.from("group_members").delete().in("group_id", ownedGroupIds);
+    if (ownedMemberDeleteError) {
+      return NextResponse.json({ error: "共有先のメンバー情報を削除できませんでした。" }, { status: 500 });
+    }
+
     const { error: groupDeleteError } = await supabase.from("patient_groups").delete().in("id", ownedGroupIds);
     if (groupDeleteError) {
       return NextResponse.json({ error: "作成した共有先を削除できませんでした。" }, { status: 500 });

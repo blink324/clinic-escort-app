@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { CompanionForm } from "@/components/CompanionForm";
-import { LineNotificationButton } from "@/components/LineNotificationButton";
 import { calendarFileName, createIcsFile, googleCalendarUrl } from "@/lib/calendar";
 import {
   appointmentDateTime,
@@ -523,15 +522,6 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
         </section>
       )}
 
-      {!shared && (
-        <section className="line-notify-panel detail-bottom">
-          <div>
-            <strong>LINE通知</strong>
-            <p>付き添い担当や通院前のリマインド通知を管理できます。</p>
-          </div>
-          <LineNotificationButton full />
-        </section>
-      )}
     </article>
   );
 }

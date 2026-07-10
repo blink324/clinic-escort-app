@@ -36,7 +36,7 @@ export default function PrivacyPage() {
         </p>
         <h2>お問い合わせ</h2>
         <p>
-          個人情報の確認・修正・削除については<Link href="/contact">お問い合わせ</Link>からご連絡ください。
+          個人情報の確認・修正・削除については<Link href="/help">お問い合わせはこちらから</Link>ご連絡ください。
         </p>
         <p className="legal-date">制定日：2026年7月8日</p>
       </section>

@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AuthPanel } from "@/components/AuthPanel";
 import { BottomNav } from "@/components/BottomNav";
-import { LineNotificationButton } from "@/components/LineNotificationButton";
 import { getActiveUser } from "@/lib/auth";
 import {
   appointmentDate,
@@ -422,14 +421,6 @@ export default function HomePage() {
           </div>
         </section>
       )}
-
-      <section className="line-notify-panel lower">
-        <div>
-          <strong>LINEでリマインドを受け取る</strong>
-          <p>付き添い担当になった時や、前日・当日朝の通知に使います。</p>
-        </div>
-        <LineNotificationButton full />
-      </section>
 
       {showPastHistory && (
         <div className="modal-backdrop top-modal" role="dialog" aria-modal="true" aria-labelledby="past-history-title">
