@@ -139,7 +139,10 @@ export function AuthPanel({ onSignedIn }: Props) {
               <h2>ホーム画面に追加して、アプリのように開けます</h2>
               <p>App Storeを使わず、公開URLからそのまま使い始められます。</p>
             </div>
-            <Link className="secondary-action full" href="/install">スマホに追加する方法</Link>
+            <Link className="install-action full" href="/install">
+              <span>ホーム画面に追加</span>
+              <small>スマホアプリのように使う</small>
+            </Link>
           </section>
 
           <p className="legal-inline dark">
