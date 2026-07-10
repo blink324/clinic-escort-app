@@ -354,7 +354,9 @@ export default function HomePage() {
                   </div>
                   <div className="schedule-main">
                     <strong className="patient-name-line">
-                      <span className="patient-avatar small" aria-hidden="true">{patientIcon(appointment.group.patient_icon)}</span>
+                      <span className="patient-avatar small" aria-hidden="true">
+                        <span>{patientIcon(appointment.group.patient_icon)}</span>
+                      </span>
                       {appointment.group.patient_name}
                     </strong>
                     <p>{appointment.hospital_name} / {appointment.department}</p>
@@ -420,7 +422,9 @@ export default function HomePage() {
                 )}
                 <strong>{appointmentTime(visibleDateTime(appointment))}</strong>
                 <span className="patient-name-line">
-                  <span className="patient-avatar tiny" aria-hidden="true">{patientIcon(appointment.group.patient_icon)}</span>
+                  <span className="patient-avatar tiny" aria-hidden="true">
+                    <span>{patientIcon(appointment.group.patient_icon)}</span>
+                  </span>
                   {appointment.group.patient_name}さん / {appointment.hospital_name}
                 </span>
               </Link>
@@ -451,7 +455,9 @@ export default function HomePage() {
                   </div>
                   <div className="schedule-main">
                     <strong className="patient-name-line">
-                      <span className="patient-avatar small" aria-hidden="true">{patientIcon(appointment.group.patient_icon)}</span>
+                      <span className="patient-avatar small" aria-hidden="true">
+                        <span>{patientIcon(appointment.group.patient_icon)}</span>
+                      </span>
                       {appointment.group.patient_name}
                     </strong>
                     <p>{appointment.hospital_name} / {appointment.department}</p>
@@ -520,7 +526,9 @@ export default function HomePage() {
                 <article className="after-visit-card" key={appointment.id}>
                   <div>
                     <strong className="patient-name-line">
-                      <span className="patient-avatar small" aria-hidden="true">{patientIcon(appointment.group.patient_icon)}</span>
+                      <span className="patient-avatar small" aria-hidden="true">
+                        <span>{patientIcon(appointment.group.patient_icon)}</span>
+                      </span>
                       {appointment.group.patient_name}さんの通院
                     </strong>
                     <p>

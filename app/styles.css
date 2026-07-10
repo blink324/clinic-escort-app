@@ -831,6 +831,7 @@ button { cursor: pointer; }
 .date-tile strong { font-size: 1.12rem; }
 
 .patient-avatar {
+  align-items: center;
   background: #eef4ff;
   border: 1px solid #d6e4f8;
   border-radius: 999px;
@@ -838,8 +839,17 @@ button { cursor: pointer; }
   flex: 0 0 auto;
   font-size: 1.25rem;
   height: 44px;
+  justify-items: center;
+  line-height: 1;
   place-items: center;
+  text-align: center;
   width: 44px;
+}
+
+.patient-avatar > span {
+  display: block;
+  line-height: 1;
+  transform: translateY(-1px);
 }
 
 .patient-avatar.small {
