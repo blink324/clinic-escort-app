@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { friendlyErrorMessage } from "@/lib/errors";
+import { defaultPatientIcon, patientIconOptions } from "@/lib/patient-icons";
 import { createGroup } from "@/lib/storage";
 
 export default function NewGroupPage() {
   const router = useRouter();
   const [patientName, setPatientName] = useState("");
+  const [patientIcon, setPatientIcon] = useState(defaultPatientIcon);
   const [relation, setRelation] = useState("");
   const [customRelation, setCustomRelation] = useState("");
   const [groupName, setGroupName] = useState("");
@@ -25,6 +27,7 @@ export default function NewGroupPage() {
     try {
       const group = await createGroup({
         patient_name: patientName,
+        patient_icon: patientIcon,
         relation: selectedRelation,
         group_name: groupName || `${patientName}の共有先`,
         memo
@@ -57,6 +60,22 @@ export default function NewGroupPage() {
           患者名
           <input required value={patientName} onChange={(event) => setPatientName(event.target.value)} />
         </label>
+        <fieldset className="icon-picker">
+          <legend>患者アイコン</legend>
+          <div>
+            {patientIconOptions.map((icon) => (
+              <button
+                aria-pressed={patientIcon === icon}
+                className={patientIcon === icon ? "active" : ""}
+                key={icon}
+                onClick={() => setPatientIcon(icon)}
+                type="button"
+              >
+                {icon}
+              </button>
+            ))}
+          </div>
+        </fieldset>
         <label>
           続柄
           <select required value={relation} onChange={(event) => setRelation(event.target.value)}>

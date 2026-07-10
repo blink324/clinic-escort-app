@@ -12,6 +12,7 @@ import {
   localDateKeyFromDate,
   localDateKeyFromDateTime
 } from "@/lib/datetime";
+import { patientIcon } from "@/lib/patient-icons";
 import { enabledReminderText } from "@/lib/reminders";
 import { getAppointments, seedDemoData, updateAppointmentStatus } from "@/lib/storage";
 import type { AppointmentStatus, AppointmentView, AuthUser } from "@/lib/types";
@@ -352,7 +353,10 @@ export default function HomePage() {
                     <strong>{appointmentTime(visibleDateTime(appointment))}</strong>
                   </div>
                   <div className="schedule-main">
-                    <strong>{appointment.group.patient_name}</strong>
+                    <strong className="patient-name-line">
+                      <span className="patient-avatar small" aria-hidden="true">{patientIcon(appointment.group.patient_icon)}</span>
+                      {appointment.group.patient_name}
+                    </strong>
                     <p>{appointment.hospital_name} / {appointment.department}</p>
                     <div className="schedule-meta">
                       <span>{appointment.companion ? `付き添い: ${appointment.companion.display_name}` : "付き添い: 未定"}</span>
@@ -415,7 +419,10 @@ export default function HomePage() {
                   </div>
                 )}
                 <strong>{appointmentTime(visibleDateTime(appointment))}</strong>
-                <span>{appointment.group.patient_name}さん / {appointment.hospital_name}</span>
+                <span className="patient-name-line">
+                  <span className="patient-avatar tiny" aria-hidden="true">{patientIcon(appointment.group.patient_icon)}</span>
+                  {appointment.group.patient_name}さん / {appointment.hospital_name}
+                </span>
               </Link>
             ))}
           </div>
@@ -443,7 +450,10 @@ export default function HomePage() {
                     <strong>{appointmentTime(visibleDateTime(appointment))}</strong>
                   </div>
                   <div className="schedule-main">
-                    <strong>{appointment.group.patient_name}</strong>
+                    <strong className="patient-name-line">
+                      <span className="patient-avatar small" aria-hidden="true">{patientIcon(appointment.group.patient_icon)}</span>
+                      {appointment.group.patient_name}
+                    </strong>
                     <p>{appointment.hospital_name} / {appointment.department}</p>
                     <div className="schedule-meta">
                       <span>{appointment.companion ? `付き添い: ${appointment.companion.display_name}` : "付き添い: 未定"}</span>
@@ -509,7 +519,10 @@ export default function HomePage() {
               {unconfirmedPastAppointments.map((appointment) => (
                 <article className="after-visit-card" key={appointment.id}>
                   <div>
-                    <strong>{appointment.group.patient_name}さんの通院</strong>
+                    <strong className="patient-name-line">
+                      <span className="patient-avatar small" aria-hidden="true">{patientIcon(appointment.group.patient_icon)}</span>
+                      {appointment.group.patient_name}さんの通院
+                    </strong>
                     <p>
                       {appointmentDate(visibleDateTime(appointment))} {appointmentTime(visibleDateTime(appointment))}
                     </p>

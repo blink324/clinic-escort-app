@@ -235,6 +235,17 @@ button { cursor: pointer; }
 .auth-card { max-width: 520px; width: 100%; }
 .detail-hero { margin-bottom: 14px; }
 .detail-hero.needs-escort { background: linear-gradient(135deg, #ffffff, var(--warning)); border-color: var(--warning-border); }
+.patient-hero-icon {
+  background: var(--soft);
+  border: 1px solid #cfe0f8;
+  border-radius: 999px;
+  display: grid;
+  font-size: 2rem;
+  height: 58px;
+  margin: 8px 0 10px;
+  place-items: center;
+  width: 58px;
+}
 .visit-place {
   background: transparent;
   border: 0;
@@ -440,6 +451,10 @@ button { cursor: pointer; }
   grid-template-columns: 82px 1fr;
   padding: 14px;
   position: relative;
+}
+
+.schedule-card {
+  grid-template-columns: 82px 44px 1fr;
 }
 
 .schedule-card.urgent {
@@ -669,6 +684,37 @@ button { cursor: pointer; }
 
 .date-tile span { color: var(--muted); font-size: 0.82rem; font-weight: 800; }
 .date-tile strong { font-size: 1.12rem; }
+
+.patient-avatar {
+  background: #eef4ff;
+  border: 1px solid #d6e4f8;
+  border-radius: 999px;
+  display: inline-grid;
+  flex: 0 0 auto;
+  font-size: 1.25rem;
+  height: 44px;
+  place-items: center;
+  width: 44px;
+}
+
+.patient-avatar.small {
+  font-size: 1rem;
+  height: 32px;
+  width: 32px;
+}
+
+.patient-avatar.tiny {
+  font-size: 0.82rem;
+  height: 24px;
+  width: 24px;
+}
+
+.patient-name-line {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+  min-width: 0;
+}
 
 .schedule-main strong,
 .group-card strong {
@@ -1296,14 +1342,48 @@ textarea { line-height: 1.6; resize: vertical; }
 }
 
 .group-card {
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 44px 1fr auto;
 }
-.group-card > span {
+.group-card > span:not(.patient-avatar) {
   background: var(--soft);
   border-radius: 999px;
   color: var(--primary-dark);
   font-weight: 900;
   padding: 7px 10px;
+}
+
+.icon-picker {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 14px;
+}
+
+.icon-picker legend {
+  font-weight: 900;
+  padding: 0 6px;
+}
+
+.icon-picker div {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.icon-picker button {
+  background: #f4f7fb;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 1.3rem;
+  min-height: 44px;
+}
+
+.icon-picker button.active {
+  background: #eaf2ff;
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 2px var(--primary);
 }
 
 .back-link {
@@ -1406,7 +1486,10 @@ textarea { line-height: 1.6; resize: vertical; }
 }
 
 .share-patient {
+  align-items: center;
   color: var(--text);
+  display: flex;
+  gap: 10px;
   font-size: 1.48rem;
   font-weight: 900;
   margin: 0;

@@ -7,6 +7,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { getActiveUser, updateDisplayName } from "@/lib/auth";
 import { appointmentDateTime, appointmentDisplayDateTimeValue } from "@/lib/datetime";
 import { friendlyErrorMessage } from "@/lib/errors";
+import { patientIcon, patientIconOptions } from "@/lib/patient-icons";
 import { getAppointments, getGroup, getGroupMembers, leaveGroup, regenerateGroupInviteToken, updateGroup } from "@/lib/storage";
 import type { AppointmentView, GroupMember, PatientGroup } from "@/lib/types";
 
@@ -35,7 +36,7 @@ export default function GroupDetailPage() {
   const [currentUserId, setCurrentUserId] = useState("");
   const [editingName, setEditingName] = useState(false);
   const [editingGroup, setEditingGroup] = useState(false);
-  const [groupForm, setGroupForm] = useState({ patient_name: "", group_name: "", memo: "" });
+  const [groupForm, setGroupForm] = useState({ patient_name: "", patient_icon: "👤", group_name: "", memo: "" });
 
   useEffect(() => {
     if (!params.id) return;
@@ -44,6 +45,7 @@ export default function GroupDetailPage() {
       setGroup(nextGroup);
       setGroupForm({
         patient_name: nextGroup?.patient_name || "",
+        patient_icon: patientIcon(nextGroup?.patient_icon),
         group_name: nextGroup?.group_name || "",
         memo: nextGroup?.memo || ""
       });
@@ -123,6 +125,7 @@ export default function GroupDetailPage() {
         setGroup(nextGroup);
         setGroupForm({
           patient_name: nextGroup.patient_name,
+          patient_icon: patientIcon(nextGroup.patient_icon),
           group_name: nextGroup.group_name,
           memo: nextGroup.memo
         });
@@ -167,6 +170,7 @@ export default function GroupDetailPage() {
       <Link className="back-link" href="/groups">共有先へ戻る</Link>
       <section className="detail-hero">
         <p className="eyebrow">通院共有</p>
+        <div className="patient-hero-icon" aria-hidden="true">{patientIcon(group.patient_icon)}</div>
         <h1>{group.group_name}</h1>
         <p className="lead">{group.memo || "家族で通院予定と付き添い担当を共有します。"}</p>
         <button className="secondary-action full hero-edit-action" onClick={() => setEditingGroup(true)} type="button">
@@ -283,6 +287,22 @@ export default function GroupDetailPage() {
                   onChange={(event) => setGroupForm((current) => ({ ...current, patient_name: event.target.value }))}
                 />
               </label>
+              <fieldset className="icon-picker">
+                <legend>患者アイコン</legend>
+                <div>
+                  {patientIconOptions.map((icon) => (
+                    <button
+                      aria-pressed={groupForm.patient_icon === icon}
+                      className={groupForm.patient_icon === icon ? "active" : ""}
+                      key={icon}
+                      onClick={() => setGroupForm((current) => ({ ...current, patient_icon: icon }))}
+                      type="button"
+                    >
+                      {icon}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
               <label>
                 共有先の名前
                 <input

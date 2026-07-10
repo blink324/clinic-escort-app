@@ -2,6 +2,7 @@
 
 import { reservationBucket, supabase } from "@/lib/supabase";
 import { normalizeDisplayDateTime, toStorageDateTime } from "@/lib/datetime";
+import { patientIcon } from "@/lib/patient-icons";
 import type {
   Appointment,
   AppointmentCompanion,
@@ -317,6 +318,7 @@ export async function createGroup(input: GroupInput) {
     .insert({
       owner_user_id: user.id,
       patient_name: input.patient_name,
+      patient_icon: patientIcon(input.patient_icon),
       relation: input.relation,
       group_name: input.group_name || `${input.patient_name}の共有先`,
       memo: input.memo,
@@ -340,7 +342,7 @@ export async function createGroup(input: GroupInput) {
 
 export async function updateGroup(
   id: string,
-  input: Pick<GroupInput, "patient_name" | "group_name" | "memo">
+  input: Pick<GroupInput, "patient_name" | "patient_icon" | "group_name" | "memo">
 ) {
   const patientName = input.patient_name.trim();
   const groupName = input.group_name.trim();
@@ -353,6 +355,7 @@ export async function updateGroup(
         ? {
             ...group,
             patient_name: patientName,
+            patient_icon: patientIcon(input.patient_icon || group.patient_icon),
             group_name: groupName,
             memo: input.memo,
             updated_at: now()
@@ -367,6 +370,7 @@ export async function updateGroup(
     .from("patient_groups")
     .update({
       patient_name: patientName,
+      patient_icon: patientIcon(input.patient_icon),
       group_name: groupName,
       memo: input.memo
     })
@@ -404,6 +408,7 @@ function createLocalGroup(input: GroupInput, user: AuthUser) {
     id: createId("group"),
     owner_user_id: user.id,
     patient_name: input.patient_name,
+    patient_icon: patientIcon(input.patient_icon),
     relation: input.relation,
     group_name: input.group_name || `${input.patient_name}の共有先`,
     memo: input.memo,
@@ -886,18 +891,21 @@ export function seedDemoData(user = getCurrentUser()) {
 
   const mother = createLocalGroup({
     patient_name: "母",
+    patient_icon: "👵",
     relation: "母",
     group_name: "母の共有先",
     memo: "血圧と薬の変更を家族で確認"
   }, user);
   const father = createLocalGroup({
     patient_name: "父",
+    patient_icon: "👴",
     relation: "父",
     group_name: "父の共有先",
     memo: "眼科の予定は付き添い必須"
   }, user);
   const grandmother = createLocalGroup({
     patient_name: "祖母",
+    patient_icon: "🌸",
     relation: "祖母",
     group_name: "祖母の共有先",
     memo: "歯科は午後が楽"

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
+import { patientIcon } from "@/lib/patient-icons";
 import { getGroupMembers, getGroups } from "@/lib/storage";
 import type { PatientGroup } from "@/lib/types";
 
@@ -53,6 +54,7 @@ export default function GroupsPage() {
         <section className="group-list">
           {groups.map((group) => (
             <Link className="group-card" href={`/groups/${group.id}`} key={group.id}>
+              <span className="patient-avatar" aria-hidden="true">{patientIcon(group.patient_icon)}</span>
               <div>
                 <strong>{group.group_name}</strong>
                 <p>{group.patient_name}さん / {group.relation}</p>

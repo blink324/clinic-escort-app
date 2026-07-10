@@ -2,6 +2,7 @@ create table if not exists patient_groups (
   id uuid primary key default gen_random_uuid(),
   owner_user_id uuid not null references auth.users(id) on delete cascade,
   patient_name text not null,
+  patient_icon text default '👤',
   relation text,
   group_name text not null,
   memo text,

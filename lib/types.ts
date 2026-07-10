@@ -12,6 +12,7 @@ export type PatientGroup = {
   id: string;
   owner_user_id: string;
   patient_name: string;
+  patient_icon?: string | null;
   relation: string;
   group_name: string;
   memo: string;
@@ -79,6 +80,7 @@ export type AppointmentInput = {
 
 export type GroupInput = {
   patient_name: string;
+  patient_icon?: string;
   relation: string;
   group_name: string;
   memo: string;

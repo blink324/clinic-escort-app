@@ -14,6 +14,7 @@ import {
   toStorageDateTime
 } from "@/lib/datetime";
 import { notifyCompanionAssigned, notifyCompanionRemoved } from "@/lib/line-notify-client";
+import { patientIcon } from "@/lib/patient-icons";
 import {
   deleteAppointment,
   deleteCompanion,
@@ -256,6 +257,7 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
       {!shared && (
         <section className={appointment.companion ? "detail-hero" : "detail-hero needs-escort"}>
           <p className="eyebrow">{appointment.group.group_name}</p>
+          <div className="patient-hero-icon" aria-hidden="true">{patientIcon(appointment.group.patient_icon)}</div>
           <h1>{appointment.group.patient_name}さんの通院</h1>
           <div className="visit-place">
             <strong>{appointment.hospital_name}</strong>

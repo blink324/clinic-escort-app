@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { friendlyErrorMessage } from "@/lib/errors";
+import { defaultPatientIcon, patientIconOptions } from "@/lib/patient-icons";
 import { createGroup, getAppointments, getGroups, saveAppointment } from "@/lib/storage";
 import type { AppointmentInput, AppointmentView, PatientGroup, ReminderType } from "@/lib/types";
 
@@ -23,6 +24,7 @@ export default function NewAppointmentPage() {
   const [saveMessage, setSaveMessage] = useState("");
   const [groupMode, setGroupMode] = useState<"existing" | "new">("new");
   const [patientName, setPatientName] = useState("");
+  const [patientIcon, setPatientIcon] = useState(defaultPatientIcon);
   const [relation, setRelation] = useState("");
   const [customRelation, setCustomRelation] = useState("");
   const [form, setForm] = useState<AppointmentInput>({
@@ -91,6 +93,7 @@ export default function NewAppointmentPage() {
         const selectedRelation = relation === "その他" ? customRelation : relation;
         const group = await createGroup({
           patient_name: patientName,
+          patient_icon: patientIcon,
           relation: selectedRelation || "本人",
           group_name: `${patientName}の共有先`,
           memo: ""
@@ -156,6 +159,22 @@ export default function NewAppointmentPage() {
               患者名
               <input required value={patientName} onChange={(event) => setPatientName(event.target.value)} />
             </label>
+            <fieldset className="icon-picker">
+              <legend>患者アイコン</legend>
+              <div>
+                {patientIconOptions.map((icon) => (
+                  <button
+                    aria-pressed={patientIcon === icon}
+                    className={patientIcon === icon ? "active" : ""}
+                    key={icon}
+                    onClick={() => setPatientIcon(icon)}
+                    type="button"
+                  >
+                    {icon}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
             <label>
               続柄
               <select required value={relation} onChange={(event) => setRelation(event.target.value)}>
