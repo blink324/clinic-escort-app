@@ -841,15 +841,21 @@ button { cursor: pointer; }
   height: 44px;
   justify-items: center;
   line-height: 1;
+  overflow: hidden;
   place-items: center;
+  position: relative;
   text-align: center;
   width: 44px;
 }
 
 .patient-avatar > span {
   display: block;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
   line-height: 1;
-  transform: translate(-1.5px, -1px);
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -53%);
 }
 
 .patient-avatar.small {
@@ -858,10 +864,19 @@ button { cursor: pointer; }
   width: 32px;
 }
 
+.schedule-card .patient-avatar.small > span,
+.after-visit-card .patient-avatar.small > span {
+  transform: translate(-61%, -53%);
+}
+
 .patient-avatar.tiny {
   font-size: 0.82rem;
   height: 24px;
   width: 24px;
+}
+
+.calendar-schedule .patient-avatar.tiny > span {
+  transform: translate(-58%, -53%);
 }
 
 .patient-name-line {
