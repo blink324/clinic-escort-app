@@ -404,6 +404,7 @@ export default function MyPage() {
           <strong>確認する</strong>
         </summary>
         <div className="profile-link-list">
+          <Link href="/install">スマホに追加する</Link>
           <Link href="/help">ヘルプ</Link>
           <Link href="/terms">利用規約</Link>
           <Link href="/privacy">プライバシーポリシー</Link>

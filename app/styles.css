@@ -1657,6 +1657,57 @@ textarea { line-height: 1.6; resize: vertical; }
   color: var(--text);
 }
 
+.install-card {
+  gap: 18px;
+}
+
+.install-preview {
+  align-items: center;
+  background: #f4f7fb;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 72px 1fr;
+  padding: 14px;
+}
+
+.install-preview img {
+  border-radius: 18px;
+  box-shadow: 0 10px 24px rgba(49, 61, 55, 0.14);
+  height: 72px;
+  width: 72px;
+}
+
+.install-preview strong {
+  color: var(--text);
+  display: block;
+  font-size: 1.18rem;
+}
+
+.install-preview span {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.install-section {
+  display: grid;
+  gap: 10px;
+}
+
+.install-steps {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 24px;
+}
+
+.install-steps li {
+  color: var(--text);
+  font-weight: 900;
+  line-height: 1.55;
+}
+
 .about-hero,
 .about-section {
   background: var(--surface);

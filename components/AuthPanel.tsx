@@ -77,7 +77,7 @@ export function AuthPanel({ onSignedIn }: Props) {
             </button>
           </div>
           <p className="legal-inline dark">
-            <Link href="/about">どんなアプリ？</Link>・<Link href="/help">ヘルプ</Link>・<Link href="/terms">利用規約</Link>・<Link href="/privacy">プライバシーポリシー</Link>
+            <Link href="/about">どんなアプリ？</Link>・<Link href="/install">スマホに追加</Link>・<Link href="/help">ヘルプ</Link>・<Link href="/terms">利用規約</Link>・<Link href="/privacy">プライバシーポリシー</Link>
           </p>
         </div>
       </section>

@@ -51,6 +51,12 @@ export default function HelpPage() {
             </p>
           </div>
           <div>
+            <strong>スマホのホーム画面に追加したい</strong>
+            <p>
+              <Link href="/install">スマホに追加する手順</Link>を開いて、iPhoneまたはAndroidの手順に沿って追加してください。
+            </p>
+          </div>
+          <div>
             <strong>退会・データ削除したい</strong>
             <p>
               マイページの「退会してデータを削除する」から、アカウントとアプリ内データを削除できます。実行後は元に戻せません。
