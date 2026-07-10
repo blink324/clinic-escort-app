@@ -453,10 +453,6 @@ button { cursor: pointer; }
   position: relative;
 }
 
-.schedule-card {
-  grid-template-columns: 82px 44px 1fr;
-}
-
 .schedule-card.urgent {
   background: linear-gradient(90deg, var(--warning), var(--surface));
   border-color: var(--warning-border);
@@ -1081,7 +1077,7 @@ textarea { line-height: 1.6; resize: vertical; }
   cursor: pointer;
   display: grid;
   gap: 10px;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   list-style: none;
   padding: 18px;
 }
@@ -1091,31 +1087,31 @@ textarea { line-height: 1.6; resize: vertical; }
 }
 
 .profile-accordion summary::after {
-  background: #eef4ff;
-  border-radius: 999px;
   color: var(--primary);
-  content: "+";
+  content: "▶︎";
   font-weight: 900;
-  height: 28px;
-  line-height: 28px;
+  grid-column: 1;
+  grid-row: 1;
   text-align: center;
-  width: 28px;
+  width: 24px;
 }
 
 .profile-accordion[open] summary::after {
-  content: "-";
+  content: "▼";
 }
 
 .profile-accordion summary span {
   color: var(--text);
   font-size: 1.08rem;
   font-weight: 900;
+  grid-column: 2;
 }
 
 .profile-accordion summary strong {
   color: var(--muted);
   font-size: 0.84rem;
   font-weight: 900;
+  grid-column: 3;
   overflow-wrap: anywhere;
   text-align: right;
 }
@@ -1808,5 +1804,4 @@ textarea { line-height: 1.6; resize: vertical; }
 @media (max-width: 390px) {
   html { font-size: 16px; }
   .top-actions, .action-grid { grid-template-columns: 1fr; }
-  .schedule-card { grid-template-columns: 72px 1fr; }
 }
