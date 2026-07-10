@@ -849,7 +849,7 @@ button { cursor: pointer; }
 .patient-avatar > span {
   display: block;
   line-height: 1;
-  transform: translateY(-1px);
+  transform: translate(-1.5px, -1px);
 }
 
 .patient-avatar.small {
@@ -875,6 +875,12 @@ button { cursor: pointer; }
 .group-card strong {
   display: block;
   font-size: 1.18rem;
+}
+
+.schedule-main .patient-name-line,
+.group-card .patient-name-line {
+  align-items: center;
+  display: inline-flex;
 }
 
 .schedule-main p,
