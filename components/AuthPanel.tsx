@@ -133,6 +133,30 @@ export function AuthPanel({ onSignedIn }: Props) {
             </ol>
           </section>
 
+          <section className="lp-section lp-safety">
+            <div>
+              <p className="eyebrow">安心して使うために</p>
+              <h2>医療判断ではなく、家族の予定共有を支えるアプリです</h2>
+              <p>
+                つきそいは、診断・治療方針・服薬などを判断するものではありません。登録した内容を家族に共有する前に、利用者自身が確認してから送ります。
+              </p>
+            </div>
+            <div className="lp-safety-grid">
+              <div>
+                <strong>共有は自分で操作</strong>
+                <p>LINE共有や共有URLの発行は、利用者が明示的に操作した時だけ行います。</p>
+              </div>
+              <div>
+                <strong>必要な情報に限定</strong>
+                <p>通院予定と付き添い調整に必要な項目を中心に扱い、電子カルテ連携は行いません。</p>
+              </div>
+              <div>
+                <strong>OCRは確認後に登録</strong>
+                <p>予約票読み取り機能を追加する場合も、読み取り結果を自動確定せず、確認・修正してから登録します。</p>
+              </div>
+            </div>
+          </section>
+
           <section className="lp-section lp-install">
             <div>
               <p className="eyebrow">スマホで使いやすく</p>

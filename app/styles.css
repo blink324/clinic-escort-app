@@ -332,6 +332,33 @@ button { cursor: pointer; }
   width: 32px;
 }
 
+.lp-safety {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), #f2f8f5);
+}
+
+.lp-safety-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.lp-safety-grid div {
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(94, 129, 112, 0.16);
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+}
+
+.lp-safety-grid strong {
+  color: #153325;
+  font-size: 1rem;
+}
+
+.lp-safety-grid p {
+  font-size: 0.94rem;
+}
+
 .lp-install {
   align-items: center;
 }
@@ -2061,6 +2088,7 @@ textarea { line-height: 1.6; resize: vertical; }
     width: min(50vw, 560px);
   }
   .lp-feature-grid { grid-template-columns: 1fr 1fr; }
+  .lp-safety-grid { grid-template-columns: repeat(3, 1fr); }
   .lp-install { grid-template-columns: 1fr 260px; }
   .info-grid { grid-template-columns: 1fr 1fr; }
   .modal-backdrop { align-items: center; }
