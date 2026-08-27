@@ -120,6 +120,14 @@ export default function NewAppointmentPage() {
       </header>
 
       <form className="form-grid" onSubmit={submit}>
+        <section className="form-notice">
+          <strong>共有前に内容を確認してください</strong>
+          <p>
+            登録した予定は、LINE共有や共有URLの発行を行った場合に、家族や付き添い候補者へ共有されます。
+            患者表示名、病院名、診療科、受診日時、持ち物、メモなどに誤りがないか確認してから共有してください。
+          </p>
+        </section>
+
         {groups.length > 0 && (
           <fieldset className="reminder-fieldset">
             <legend>患者</legend>
@@ -254,6 +262,9 @@ export default function NewAppointmentPage() {
           <input accept="image/*" type="file" onChange={(event) => handleImage(event.target.files?.[0])} />
           <span>写真を選ぶ</span>
         </label>
+        <p className="help-text">
+          予約票写真には患者番号や氏名などが写る場合があります。必要な場合のみ添付してください。
+        </p>
         {form.reservation_image_url && <img className="reservation-preview" src={form.reservation_image_url} alt="予約票プレビュー" />}
 
         {saveMessage && <p className="error-text">{saveMessage}</p>}

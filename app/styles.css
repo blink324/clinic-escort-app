@@ -1135,6 +1135,28 @@ button { cursor: pointer; }
   gap: 16px;
 }
 
+.form-notice {
+  background: #f4f8f6;
+  border: 1px solid rgba(94, 129, 112, 0.2);
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+}
+
+.form-notice strong {
+  color: #153325;
+  font-size: 1rem;
+}
+
+.form-notice p {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.55;
+  margin: 0;
+}
+
 label {
   color: var(--text);
   display: grid;
