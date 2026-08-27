@@ -48,8 +48,8 @@ export default function InstallPage() {
           </div>
         </div>
 
-        <Link className="primary-action full" href="/">
-          つきそいを開く
+        <Link className="primary-action full install-open-action" href="/">
+          つきそいを開いて使い始める
         </Link>
       </section>
     </main>

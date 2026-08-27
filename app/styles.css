@@ -1895,6 +1895,11 @@ textarea { line-height: 1.6; resize: vertical; }
   gap: 10px;
 }
 
+.install-open-action {
+  font-size: 1rem;
+  margin-top: 4px;
+}
+
 .install-steps {
   display: grid;
   gap: 8px;
