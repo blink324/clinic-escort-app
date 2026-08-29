@@ -93,6 +93,7 @@ button { cursor: pointer; }
 .primary-action { background: var(--primary); color: white; }
 .secondary-action { background: var(--surface); border: 1px solid var(--line); color: var(--text); }
 .line-action { background: var(--share-blue); color: white; }
+button.line-action { cursor: pointer; }
 .danger-action { background: #fff2ef; border: 1px solid #efc4bd; color: var(--danger); }
 .small { min-height: 46px; padding: 10px 14px; }
 .full { width: 100%; }
@@ -1763,6 +1764,78 @@ textarea { line-height: 1.6; resize: vertical; }
   background: var(--warning);
   border: 1px solid var(--warning-border);
   color: #9d2246;
+}
+
+.share-visible-notice,
+.share-confirm-box {
+  background: #f5faf7;
+  border: 1px solid #cfe2d6;
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 14px;
+}
+
+.share-visible-notice strong,
+.share-confirm-box > strong {
+  color: #153325;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.share-visible-notice p,
+.share-confirm-box p {
+  color: var(--muted);
+  font-weight: 800;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.shared-item-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.shared-item-chips span {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 900;
+  padding: 7px 10px;
+}
+
+.share-data-list {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.share-data-list li {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+}
+
+.share-data-list span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.share-data-list strong {
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 900;
+  line-height: 1.35;
 }
 
 .shared-detail .focus-panel,

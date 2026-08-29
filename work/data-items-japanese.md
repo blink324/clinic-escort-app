@@ -127,6 +127,8 @@ Supabase Authで管理します。
 
 ## 7. LINE連携 `line_connections`
 
+Supabase Studio上のカラム確認済み: `user_id`, `line_user_id`, `display_name`, `notifications_enabled`, `created_at`, `updated_at`
+
 | Supabase上の項目 | 日本語の項目名 | 用途 | 主な閲覧/利用範囲 | 削除 |
 | --- | --- | --- | --- | --- |
 | `user_id` | ユーザーID | アプリ利用者とLINEアカウントを紐づけるため | システム | LINE通知停止/退会時 |

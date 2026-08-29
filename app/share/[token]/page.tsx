@@ -32,6 +32,17 @@ export default function SharePage() {
     );
   }
 
+  const visibleItems = [
+    "患者表示名",
+    "病院名",
+    "診療科",
+    "受診日時",
+    "持ち物",
+    "メモ",
+    "付き添い担当",
+    appointment.reservation_image_url ? "予約票写真" : "予約票写真なし"
+  ];
+
   return (
     <main className="mobile-shell">
       <section className="share-appointment-hero" aria-label="通院予定">
@@ -50,6 +61,15 @@ export default function SharePage() {
         </div>
         <div className={appointment.companion ? "share-companion ready" : "share-companion missing"}>
           {appointment.companion ? `付き添い: ${appointment.companion.display_name}さん` : "付き添い: 未定"}
+        </div>
+      </section>
+      <section className="share-visible-notice" aria-label="共有ページで見える内容">
+        <strong>この共有ページで見える内容</strong>
+        <p>家族や付き添い候補者は、通院予定の確認と付き添い担当の登録ができます。</p>
+        <div className="shared-item-chips">
+          {visibleItems.map((item) => (
+            <span key={item}>{item}</span>
+          ))}
         </div>
       </section>
       <AppointmentDetail appointment={appointment} shared />

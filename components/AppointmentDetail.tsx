@@ -44,6 +44,7 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
   const router = useRouter();
   const [appointment, setAppointment] = useState(initialAppointment);
   const [copied, setCopied] = useState(false);
+  const [confirmingShare, setConfirmingShare] = useState(false);
   const [editingCompanion, setEditingCompanion] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState(false);
   const [selectingCompanion, setSelectingCompanion] = useState(false);
@@ -81,13 +82,13 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
   const isMyCompanion = Boolean(user && appointment.companion?.user_id === user.id);
 
   useEffect(() => {
-    if (!editingAppointment && !selectingCompanion) return;
+    if (!editingAppointment && !selectingCompanion && !confirmingShare) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [editingAppointment, selectingCompanion]);
+  }, [editingAppointment, selectingCompanion, confirmingShare]);
 
   useEffect(() => {
     async function loadMembers() {
@@ -251,6 +252,16 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
   const isPast = new Date(appointment.appointment_datetime).getTime() < Date.now();
   const statusLabel =
     appointment.status === "completed" ? "受診完了" : appointment.status === "missed" ? "未受診" : "未確認";
+  const sharedItems = [
+    ["患者表示名", `${appointment.group.patient_name}さん`],
+    ["病院名", appointment.hospital_name],
+    ["診療科", appointment.department],
+    ["受診日時", appointmentDateTime(displayDateTime)],
+    ["持ち物", appointment.items_to_bring || "未登録"],
+    ["メモ", appointment.memo || "未登録"],
+    ["付き添い担当", appointment.companion ? `${appointment.companion.display_name}さん` : "未定"],
+    ["予約票写真", appointment.reservation_image_url ? "添付あり" : "添付なし"]
+  ];
 
   return (
     <article className={shared ? "detail-stack shared-detail" : "detail-stack"}>
@@ -372,13 +383,46 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
           <button className="danger-action" onClick={() => void removeAppointment()}>
             予定を削除
           </button>
-          <a className="line-action" href={lineUrl} target="_blank" rel="noreferrer">
+          <button className="line-action" onClick={() => setConfirmingShare(true)} type="button">
             LINEで予定共有
-          </a>
+          </button>
           <button className="secondary-action" onClick={copyUrl}>
             {copied ? "コピーしました" : "共有URLをコピー"}
           </button>
         </section>
+      )}
+
+      {confirmingShare && !shared && (
+        <div className="modal-backdrop top-modal" role="dialog" aria-modal="true" aria-labelledby="share-confirm-title">
+          <section className="modal-panel">
+            <div className="modal-header">
+              <h2 id="share-confirm-title">LINEで共有する内容</h2>
+              <button className="text-button" onClick={() => setConfirmingShare(false)} type="button">
+                閉じる
+              </button>
+            </div>
+            <div className="share-confirm-box">
+              <strong>共有前に内容を確認してください</strong>
+              <p>この予定の共有URLを知っている人は、以下の内容を確認できます。</p>
+              <ul className="share-data-list">
+                {sharedItems.map(([label, value]) => (
+                  <li key={label}>
+                    <span>{label}</span>
+                    <strong>{value}</strong>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="button-column">
+              <a className="line-action full" href={lineUrl} target="_blank" rel="noreferrer" onClick={() => setConfirmingShare(false)}>
+                内容を確認してLINEで共有
+              </a>
+              <button className="secondary-action full" onClick={() => void copyUrl()} type="button">
+                {copied ? "コピーしました" : "共有URLをコピー"}
+              </button>
+            </div>
+          </section>
+        </div>
       )}
 
       {editingAppointment && !shared && (
