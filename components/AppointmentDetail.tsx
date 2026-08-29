@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
+import type { FormEvent } from "react";
 import { CompanionForm } from "@/components/CompanionForm";
 import { calendarFileName, createIcsFile, googleCalendarUrl } from "@/lib/calendar";
 import {
@@ -45,6 +45,7 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
   const [appointment, setAppointment] = useState(initialAppointment);
   const [copied, setCopied] = useState(false);
   const [confirmingShare, setConfirmingShare] = useState(false);
+  const [confirmingEdit, setConfirmingEdit] = useState(false);
   const [editingCompanion, setEditingCompanion] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState(false);
   const [selectingCompanion, setSelectingCompanion] = useState(false);
@@ -82,13 +83,13 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
   const isMyCompanion = Boolean(user && appointment.companion?.user_id === user.id);
 
   useEffect(() => {
-    if (!editingAppointment && !selectingCompanion && !confirmingShare) return;
+    if (!editingAppointment && !selectingCompanion && !confirmingShare && !confirmingEdit) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [editingAppointment, selectingCompanion, confirmingShare]);
+  }, [editingAppointment, selectingCompanion, confirmingShare, confirmingEdit]);
 
   useEffect(() => {
     async function loadMembers() {
@@ -154,8 +155,12 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
     reader.readAsDataURL(file);
   }
 
-  async function saveEditedAppointment(event: FormEvent<HTMLFormElement>) {
+  function requestEditedAppointmentSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setConfirmingEdit(true);
+  }
+
+  async function saveEditedAppointment() {
     setSavingAppointment(true);
     try {
       const updatedAppointment = await updateAppointment(appointment.id, editForm);
@@ -187,6 +192,7 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
         reservation_image_url:
           current.reservation_image_url || updatedAppointment?.reservation_image_url || appointment.reservation_image_url || ""
       }));
+      setConfirmingEdit(false);
       setEditingAppointment(false);
     } finally {
       setSavingAppointment(false);
@@ -252,6 +258,22 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
   const isPast = new Date(appointment.appointment_datetime).getTime() < Date.now();
   const statusLabel =
     appointment.status === "completed" ? "受診完了" : appointment.status === "missed" ? "未受診" : "未確認";
+  const editReminderText = [
+    editForm.reminders.one_week_before ? "1週間前" : "",
+    editForm.reminders.one_day_before ? "前日" : "",
+    editForm.reminders.same_day_morning ? "当日朝" : ""
+  ]
+    .filter(Boolean)
+    .join(" / ");
+  const editedItems = [
+    ["病院名", editForm.hospital_name],
+    ["診療科", editForm.department],
+    ["受診日時", appointmentDateTime(toStorageDateTime(editForm.appointment_datetime))],
+    ["持ち物", editForm.items_to_bring || "未登録"],
+    ["メモ", editForm.memo || "未登録"],
+    ["予約票写真", editForm.reservation_image_url ? "添付あり" : "添付なし"],
+    ["リマインド", editReminderText || "すべてOFF"]
+  ];
   const sharedItems = [
     ["患者表示名", `${appointment.group.patient_name}さん`],
     ["病院名", appointment.hospital_name],
@@ -434,7 +456,7 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
                 閉じる
               </button>
             </div>
-            <form className="inline-form" onSubmit={(event) => void saveEditedAppointment(event)}>
+            <form className="inline-form" onSubmit={requestEditedAppointmentSave}>
               <label>
                 病院名
                 <input
@@ -507,6 +529,39 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
                 {savingAppointment ? "保存中..." : "変更を保存"}
               </button>
             </form>
+          </section>
+        </div>
+      )}
+
+      {confirmingEdit && !shared && (
+        <div className="modal-backdrop top-modal" role="dialog" aria-modal="true" aria-labelledby="edit-confirm-title">
+          <section className="modal-panel">
+            <div className="modal-header">
+              <h2 id="edit-confirm-title">この内容で更新しますか？</h2>
+              <button className="text-button" onClick={() => setConfirmingEdit(false)} type="button">
+                戻る
+              </button>
+            </div>
+            <div className="share-confirm-box">
+              <strong>変更後の内容</strong>
+              <p>保存すると、予定詳細・共有ページ・リマインドに反映されます。</p>
+              <ul className="share-data-list">
+                {editedItems.map(([label, value]) => (
+                  <li key={label}>
+                    <span>{label}</span>
+                    <strong>{value}</strong>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="button-column">
+              <button className="primary-action full" disabled={savingAppointment} onClick={() => void saveEditedAppointment()} type="button">
+                {savingAppointment ? "保存中..." : "この内容で更新する"}
+              </button>
+              <button className="secondary-action full" disabled={savingAppointment} onClick={() => setConfirmingEdit(false)} type="button">
+                編集に戻る
+              </button>
+            </div>
           </section>
         </div>
       )}
