@@ -174,6 +174,16 @@ async function uploadReservationImage(appointmentId: string, image?: string) {
   return path;
 }
 
+function isStoredReservationImagePath(pathOrUrl?: string | null) {
+  return Boolean(pathOrUrl && !pathOrUrl.startsWith("data:") && !pathOrUrl.startsWith("http"));
+}
+
+async function deleteReservationImage(pathOrUrl?: string | null) {
+  if (!supabase || !isStoredReservationImagePath(pathOrUrl)) return;
+  const { error } = await supabase.storage.from(reservationBucket).remove([pathOrUrl as string]);
+  throwIfError(error);
+}
+
 export function getCurrentUser() {
   return readJson<AuthUser | null>(USER_KEY, null);
 }
@@ -764,6 +774,7 @@ export async function updateAppointment(
     .select("*")
     .single<Appointment>();
   throwIfError(error);
+  if (!updatedAppointment) throw new Error("予定を更新できませんでした。");
 
   let nextAppointment = updatedAppointment;
   if (input.reservation_image_url !== undefined) {
@@ -775,6 +786,10 @@ export async function updateAppointment(
       .select("*")
       .single<Appointment>();
     throwIfError(imageError);
+    if (!imageUpdatedAppointment) throw new Error("予約票写真を更新できませんでした。");
+    if (imagePath && imagePath !== updatedAppointment.reservation_image_url) {
+      await deleteReservationImage(updatedAppointment.reservation_image_url);
+    }
     nextAppointment = imageUpdatedAppointment;
   }
 
@@ -798,6 +813,13 @@ export async function deleteAppointment(id: string) {
     );
     return;
   }
+  const { data: appointment, error: readError } = await supabase
+    .from("appointments")
+    .select("reservation_image_url")
+    .eq("id", id)
+    .maybeSingle<Pick<Appointment, "reservation_image_url">>();
+  throwIfError(readError);
+  await deleteReservationImage(appointment?.reservation_image_url);
   const { error } = await supabase.from("appointments").delete().eq("id", id);
   throwIfError(error);
 }

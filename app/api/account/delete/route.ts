@@ -1,6 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
+const reservationBucket = process.env.NEXT_PUBLIC_SUPABASE_RESERVATION_BUCKET || "reservation-images";
+
+type OwnedAppointment = {
+  id: string;
+  reservation_image_url: string | null;
+};
+
 function adminClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -8,6 +15,10 @@ function adminClient() {
   return createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false }
   });
+}
+
+function isStoredReservationImagePath(pathOrUrl?: string | null): pathOrUrl is string {
+  return Boolean(pathOrUrl && !pathOrUrl.startsWith("data:") && !pathOrUrl.startsWith("http"));
 }
 
 function bearerToken(request: Request) {
@@ -48,14 +59,25 @@ export async function POST(request: Request) {
   if (ownedGroupIds.length > 0) {
     const { data: ownedAppointments, error: appointmentReadError } = await supabase
       .from("appointments")
-      .select("id")
-      .in("group_id", ownedGroupIds);
+      .select("id, reservation_image_url")
+      .in("group_id", ownedGroupIds)
+      .returns<OwnedAppointment[]>();
     if (appointmentReadError) {
       return NextResponse.json({ error: "削除対象の予定を確認できませんでした。" }, { status: 500 });
     }
 
     const ownedAppointmentIds = (ownedAppointments || []).map((appointment) => appointment.id);
     if (ownedAppointmentIds.length > 0) {
+      const imagePaths = (ownedAppointments || [])
+        .map((appointment) => appointment.reservation_image_url)
+        .filter(isStoredReservationImagePath);
+      if (imagePaths.length > 0) {
+        const { error: imageDeleteError } = await supabase.storage.from(reservationBucket).remove(imagePaths);
+        if (imageDeleteError) {
+          return NextResponse.json({ error: "予約票写真を削除できませんでした。" }, { status: 500 });
+        }
+      }
+
       const appointmentCleanupResults = await Promise.allSettled([
         supabase.from("notification_logs").delete().in("appointment_id", ownedAppointmentIds),
         supabase.from("reminder_settings").delete().in("appointment_id", ownedAppointmentIds),
