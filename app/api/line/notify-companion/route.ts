@@ -163,6 +163,7 @@ export async function POST(request: Request) {
         dateText,
         `${appointment.hospital_name} / ${appointment.department}`,
         "",
+        "付き添い担当は「私が付き添う」または付き添う人を設定できます。",
         `確認する: ${shareUrl}`
       ].join("\n");
       return pushLineMessage(connection.line_user_id, text);

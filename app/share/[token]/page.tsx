@@ -65,7 +65,7 @@ export default function SharePage() {
       </section>
       <section className="share-visible-notice" aria-label="共有ページで見える内容">
         <strong>この共有ページで見える内容</strong>
-        <p>家族や付き添い候補者は、通院予定の確認と付き添い担当の登録ができます。</p>
+        <p>家族や付き添い候補者は、通院予定の確認と「私が付き添う」または付き添う人の設定ができます。</p>
         <div className="shared-item-chips">
           {visibleItems.map((item) => (
             <span key={item}>{item}</span>

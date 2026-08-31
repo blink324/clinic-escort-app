@@ -327,7 +327,7 @@ export function AppointmentDetail({ appointment: initialAppointment, shared = fa
           ) : (
             <div className="escort-box missing">
               <strong>まだ決まっていません</strong>
-              <p>家族の誰かが付き添える場合は、この画面から担当できます。</p>
+              <p>「私が付き添う」または付き添う人を設定して、担当者を決められます。</p>
             </div>
           )}
         </div>

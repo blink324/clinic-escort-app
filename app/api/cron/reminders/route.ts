@@ -213,6 +213,7 @@ async function runReminderNotifications(request: Request, options: ReminderRunOp
       `${appointment.hospital_name} / ${appointment.department}`,
       "",
       "付き添い担当と持ち物を確認しておきましょう。",
+      "未定の場合は「私が付き添う」または付き添う人を設定できます。",
       `確認する: ${shareUrl}`
     ].join("\n");
 

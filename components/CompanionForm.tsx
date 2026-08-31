@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { useState } from "react";
+import type { FormEvent } from "react";
 import { getCurrentUser, saveCompanion } from "@/lib/storage";
 import type { AppointmentCompanion } from "@/lib/types";
 
@@ -20,6 +21,8 @@ export function CompanionForm({ appointmentId, compact = false, onSaved }: Props
 
   async function becomeCompanion() {
     if (user && !compact) {
+      const ok = window.confirm(`${user.display_name}さんを付き添い担当にします。本当によろしいですか？`);
+      if (!ok) return;
       setSaving(true);
       try {
         onSaved(await saveCompanion(appointmentId, { display_name: user.display_name, contact: user.email, user_id: user.id }));
@@ -33,6 +36,8 @@ export function CompanionForm({ appointmentId, compact = false, onSaved }: Props
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const ok = window.confirm(`${displayName}さんを付き添い担当にします。本当によろしいですか？`);
+    if (!ok) return;
     setSaving(true);
     try {
       onSaved(await saveCompanion(appointmentId, { display_name: displayName, contact, comment, user_id: user?.id ?? null }));
